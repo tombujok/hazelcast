@@ -17,6 +17,9 @@
 package com.hazelcast.query.impl.getters;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 final class FieldGetter extends Getter {
     private final Field field;

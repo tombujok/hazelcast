@@ -54,7 +54,7 @@ public class EqualPredicate extends AbstractPredicate implements NegatablePredic
 
     @Override
     public boolean apply(Map.Entry mapEntry) {
-        Comparable entryValue = readAttribute(mapEntry);
+        Comparable entryValue = (Comparable) readAttribute(mapEntry);
         if (entryValue == null) {
             return value == null || value == IndexImpl.NULL;
         }

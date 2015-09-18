@@ -95,7 +95,7 @@ public class IndexImpl implements Index {
 
         Data key = e.getIndexKey();
         Comparable oldValue = recordValues.remove(key);
-        Comparable newValue = e.getAttribute(attribute);
+        Comparable newValue = (Comparable) e.getAttribute(attribute);
         if (newValue == null) {
             newValue = NULL;
         } else if (newValue.getClass().isEnum()) {

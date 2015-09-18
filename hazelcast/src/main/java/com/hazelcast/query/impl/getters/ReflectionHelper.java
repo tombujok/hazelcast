@@ -105,7 +105,7 @@ public final class ReflectionHelper {
     }
 
 
-    private static Getter get(Class clazz, String attribute) {
+    private static Getter getFromCache(Class clazz, String attribute) {
         ConcurrentMap<String, Getter> cache = GETTER_CACHE.get(clazz);
         if (cache == null) {
             return null;
@@ -114,7 +114,7 @@ public final class ReflectionHelper {
         return cache.get(attribute);
     }
 
-    private static Getter set(Class clazz, String attribute, Getter getter) {
+    private static Getter storeIntoCache(Class clazz, String attribute, Getter getter) {
         ConcurrentMap<String, Getter> cache = ConcurrencyUtil.getOrPutIfAbsent(GETTER_CACHE, clazz, GETTER_CACHE_CONSTRUCTOR);
         Getter foundGetter = cache.putIfAbsent(attribute, getter);
         return foundGetter == null ? getter : foundGetter;
@@ -125,7 +125,9 @@ public final class ReflectionHelper {
     }
 
     public static AttributeType getAttributeType(Object value, String attribute) {
-        return getAttributeType(createGetter(value, attribute).getReturnType());
+        Getter getter = createGetter(value, attribute);
+        Class returnType = getter.getReturnType();
+        return getAttributeType(returnType);
     }
 
     private static Getter createGetter(Object obj, String attribute) {
@@ -135,7 +137,7 @@ public final class ReflectionHelper {
 
         final Class targetClazz = obj.getClass();
         Class clazz = targetClazz;
-        Getter getter = get(clazz, attribute);
+        Getter getter = getFromCache(clazz, attribute);
         if (getter != null) {
             return getter;
         }
@@ -144,30 +146,39 @@ public final class ReflectionHelper {
             Getter parent = null;
             List<String> possibleMethodNames = new ArrayList<String>(INITIAL_CAPACITY);
             for (final String name : attribute.split("\\.")) {
+                String nameWithSuffix = removeReducerSuffix(name);
+                String reducerSuffix = (nameWithSuffix == name) ? null : getReducerSuffix(name);
+
                 Getter localGetter = null;
                 possibleMethodNames.clear();
-                possibleMethodNames.add(name);
-                final String camelName = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+                possibleMethodNames.add(nameWithSuffix);
+                final String camelName = Character.toUpperCase(nameWithSuffix.charAt(0)) + nameWithSuffix.substring(1);
                 possibleMethodNames.add("get" + camelName);
                 possibleMethodNames.add("is" + camelName);
-                if (name.equals(THIS_ATTRIBUTE_NAME)) {
-                    localGetter = new ThisGetter(parent, obj);
+                if (nameWithSuffix.equals(THIS_ATTRIBUTE_NAME)) {
+                    localGetter = GetterFactory.newThisGetter(parent, obj);
                 } else {
-                    for (String methodName : possibleMethodNames) {
-                        try {
-                            final Method method = clazz.getMethod(methodName);
-                            method.setAccessible(true);
-                            localGetter = new MethodGetter(parent, method);
-                            clazz = method.getReturnType();
-                            break;
-                        } catch (NoSuchMethodException ignored) {
-                            EmptyStatement.ignore(ignored);
+                    if (clazz.isArray()) {
+                        clazz = clazz.getComponentType();
+                    }
+
+                    if (localGetter == null) {
+                        for (String methodName : possibleMethodNames) {
+                            try {
+                                final Method method = clazz.getMethod(methodName);
+                                method.setAccessible(true);
+                                localGetter = GetterFactory.newMethodGetter(parent, method);
+                                clazz = method.getReturnType();
+                                break;
+                            } catch (NoSuchMethodException ignored) {
+                                EmptyStatement.ignore(ignored);
+                            }
                         }
                     }
                     if (localGetter == null) {
                         try {
-                            final Field field = clazz.getField(name);
-                            localGetter = new FieldGetter(parent, field);
+                            final Field field = clazz.getField(nameWithSuffix);
+                            localGetter = GetterFactory.newFieldGetter(parent, field, reducerSuffix);
                             clazz = field.getType();
                         } catch (NoSuchFieldException ignored) {
                             EmptyStatement.ignore(ignored);
@@ -177,9 +188,9 @@ public final class ReflectionHelper {
                         Class c = clazz;
                         while (!c.isInterface() && !Object.class.equals(c)) {
                             try {
-                                final Field field = c.getDeclaredField(name);
+                                final Field field = c.getDeclaredField(nameWithSuffix);
                                 field.setAccessible(true);
-                                localGetter = new FieldGetter(parent, field);
+                                localGetter = GetterFactory.newFieldGetter(parent, field, reducerSuffix);
                                 clazz = field.getType();
                                 break;
                             } catch (NoSuchFieldException ignored) {
@@ -190,14 +201,14 @@ public final class ReflectionHelper {
                 }
                 if (localGetter == null) {
                     throw new IllegalArgumentException("There is no suitable accessor for '"
-                            + name + "' on class '" + clazz + "'");
+                            + nameWithSuffix + "' on class '" + clazz + "'");
                 }
                 parent = localGetter;
             }
             getter = parent;
 
             if (getter.isCacheable()) {
-                getter = set(targetClazz, attribute, getter);
+                getter = storeIntoCache(targetClazz, attribute, getter);
             }
             return getter;
         } catch (Throwable e) {
@@ -205,8 +216,22 @@ public final class ReflectionHelper {
         }
     }
 
-    public static Comparable extractValue(Object object, String attributeName) throws Exception {
-        return (Comparable) createGetter(object, attributeName).getValue(object);
+    private static String removeReducerSuffix(String name) {
+        int indexOfOpeningBracket = name.indexOf('(');
+        if (indexOfOpeningBracket == -1) {
+            return name;
+        }
+        return name.substring(0, indexOfOpeningBracket);
+    }
+
+    private static String getReducerSuffix(String name) {
+        int indexOfOpeningBracket = name.indexOf('(');
+        return name.substring(indexOfOpeningBracket, name.length());
+    }
+
+
+    public static Object extractValue(Object object, String attributeName) throws Exception {
+        return createGetter(object, attributeName).getValue(object);
     }
 
     public static <T> T invokeMethod(Object object, String methodName) throws RuntimeException {
