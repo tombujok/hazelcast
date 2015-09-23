@@ -63,7 +63,7 @@ public class IndexImpl implements Index {
 
     @Override
     public void removeEntryIndex(Record record) {
-        Comparable value = QueryEntry.extractAttribute(attribute, record.getKey(), record.getValue(), ss);
+        Comparable value = (Comparable) QueryEntry.extractAttribute(attribute, record.getKey(), record.getValue(), ss);
 
         if (value.getClass().isEnum()) {
             value = TypeConverters.ENUM_CONVERTER.convert(value);
@@ -100,25 +100,38 @@ public class IndexImpl implements Index {
             converter = attributeType == null ? TypeConverters.IDENTITY_CONVERTER : attributeType.getConverter();
         }
 
-        Comparable oldValue = null;
+        Object oldValue = null;
         if(oldRecordValue != null) {
             oldValue = QueryEntry.extractAttribute(attribute, e.getKey(), oldRecordValue, ss);
         }
 
-        Comparable newValue = QueryEntry.extractAttribute(attribute, e.getKey(), e.getValue(), ss);
+        Object newValue = QueryEntry.extractAttribute(attribute, e.getKey(), e.getValue(), ss);
+        createOrUpdateIndexStore(newValue, oldValue, e);
+    }
+
+    private void createOrUpdateIndexStore(Object newValue, Object oldValue, QueryableEntry e) {
+        newValue = sanitizeValue(newValue);
+        oldValue = sanitizeValue(oldValue);
+        if (newValue.getClass().isArray() ) {
+
+        } else {
+            if (oldValue == null) {
+                // new
+                indexStore.newIndex((Comparable) newValue, e);
+            } else {
+                // update
+                indexStore.updateIndex((Comparable) oldValue, (Comparable) newValue, e);
+            }
+        }
+    }
+
+    private Object sanitizeValue(Object newValue) {
         if (newValue == null) {
             newValue = NULL;
         } else if (newValue.getClass().isEnum()) {
-            newValue = TypeConverters.ENUM_CONVERTER.convert(newValue);
+            newValue = TypeConverters.ENUM_CONVERTER.convert((Comparable) newValue);
         }
-
-        if (oldValue == null) {
-            // new
-            indexStore.newIndex(newValue, e);
-        } else {
-            // update
-            indexStore.updateIndex(oldValue, newValue, e);
-        }
+        return newValue;
     }
 
     @Override
