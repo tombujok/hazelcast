@@ -16,7 +16,12 @@
 
 package com.hazelcast.map.impl.query;
 
+import static com.hazelcast.util.SortingUtil.compareAnchor;
+import static com.hazelcast.util.SortingUtil.getSortedQueryResultSet;
+import static com.hazelcast.util.SortingUtil.getSortedSubList;
+
 import com.hazelcast.core.Member;
+import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.map.QueryResultSizeExceededException;
 import com.hazelcast.map.impl.MapService;
@@ -24,7 +29,6 @@ import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.PartitionContainer;
 import com.hazelcast.map.impl.record.Record;
 import com.hazelcast.nio.serialization.Data;
-import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.partition.InternalPartitionService;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.PagingPredicateAccessor;
@@ -54,10 +58,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
-import static com.hazelcast.util.SortingUtil.compareAnchor;
-import static com.hazelcast.util.SortingUtil.getSortedQueryResultSet;
-import static com.hazelcast.util.SortingUtil.getSortedSubList;
 
 /**
  * The {@link MapQueryEngine} implementation.

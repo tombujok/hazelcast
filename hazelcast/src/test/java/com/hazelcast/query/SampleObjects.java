@@ -216,6 +216,48 @@ public final class SampleObjects {
         STATE1, STATE2
     }
 
+    public static class EmployeePortable extends Employee implements Portable {
+
+        public EmployeePortable() {
+            super();
+        }
+
+        public EmployeePortable(String key, int i, boolean b, int j) {
+            super(key, i, b, j);
+        }
+
+        @Override
+        public int getFactoryId() {
+            return 666;
+        }
+
+        @Override
+        public int getClassId() {
+            return 2;
+        }
+
+        @Override
+        public void writePortable(PortableWriter w) throws IOException {
+            w.writeLong("id", id);
+            w.writeUTF("name", name);
+            w.writeUTF("city", city);
+            w.writeInt("age", age);
+            w.writeBoolean("active", active);
+            w.writeDouble("salary", salary);
+        }
+
+        @Override
+        public void readPortable(PortableReader r) throws IOException {
+            id = r.readLong("id");
+            name = r.readUTF("name");
+            city = r.readUTF("city");
+            age = r.readInt("age");
+            active = r.readBoolean("active");
+            salary = r.readDouble("salary");
+        }
+
+    }
+
     public static class Employee implements Serializable {
         long id;
         String name;

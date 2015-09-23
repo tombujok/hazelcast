@@ -38,8 +38,8 @@ import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.map.impl.MapContainer;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapStoreWrapper;
-import com.hazelcast.map.impl.recordstore.RecordStore;
 import com.hazelcast.map.impl.proxy.MapProxyImpl;
+import com.hazelcast.map.impl.recordstore.RecordStore;
 import com.hazelcast.map.mapstore.MapStoreWriteBehindTest.RecordingMapStore;
 import com.hazelcast.monitor.LocalMapStats;
 import com.hazelcast.query.SampleObjects.Employee;
@@ -944,7 +944,7 @@ public class MapStoreTest extends HazelcastTestSupport {
 
     public static Config newConfig(String mapName, Object storeImpl, int writeDelaySeconds, InitialLoadMode loadMode) {
         XmlConfigBuilder configBuilder = new XmlConfigBuilder();
-        Config config = configBuilder.build();
+        Config config = new Config(); //configBuilder.build();
 
         config.getManagementCenterConfig().setEnabled(false);
         MapConfig mapConfig = config.getMapConfig(mapName);
