@@ -27,9 +27,9 @@ import com.hazelcast.query.impl.QueryResultEntry;
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Collections.newSetFromMap;
@@ -39,7 +39,7 @@ import static java.util.Collections.newSetFromMap;
  */
 public class QueryResultSet extends AbstractSet implements IdentifiedDataSerializable {
 
-    private final Set<QueryResultEntry> entries = newSetFromMap(new ConcurrentHashMap<QueryResultEntry, Boolean>());
+    private final Collection<QueryResultEntry> entries = newSetFromMap(new ConcurrentHashMap<QueryResultEntry, Boolean>());
     private final SerializationService serializationService;
 
     private IterationType iterationType;
