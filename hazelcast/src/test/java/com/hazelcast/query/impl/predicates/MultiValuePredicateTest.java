@@ -2,10 +2,12 @@ package com.hazelcast.query.impl.predicates;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import com.hazelcast.mapreduce.aggregation.impl.ComparableMaxAggregation;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
+import com.hazelcast.test.TestCollectionUtils;
 import com.hazelcast.test.annotation.QuickTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -16,9 +18,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import static com.hazelcast.test.TestCollectionUtils.setOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -129,6 +133,22 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         }
         System.out.println("-----");
 
+        predicate = new ContainsAllPredicate("limbs.nails.colour", setOf((Comparable)"red"));
+        values = map.values(predicate);
+        assertThat(values, containsInAnyOrder(body1, body2));
+        for (Body body : values) {
+            System.out.println(body);
+        }
+        System.out.println("-----");
+
+        
+        predicate = new ContainsAllPredicate("limbs.nails.colour", setOf((Comparable) "red", "blue"));
+        values = map.values(predicate);
+        assertThat(values, containsInAnyOrder(body1));
+        for (Body body : values) {
+            System.out.println(body);
+        }
+        System.out.println("-----");
 
     }
 
