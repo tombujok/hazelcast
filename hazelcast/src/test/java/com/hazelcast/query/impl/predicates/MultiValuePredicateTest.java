@@ -14,12 +14,9 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.test.TestCollectionUtils.setOf;
@@ -27,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.emptyCollectionOf;
+import static org.hamcrest.Matchers.is;
 
 @RunWith(HazelcastSerialClassRunner.class)
 @Category(QuickTest.class)
@@ -145,6 +142,14 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         predicate = new ContainsAllPredicate("limbs.nails.colour", setOf((Comparable) "red", "blue"));
         values = map.values(predicate);
         assertThat(values, containsInAnyOrder(body1));
+        for (Body body : values) {
+            System.out.println(body);
+        }
+        System.out.println("-----");
+
+        predicate = new ContainsAllPredicate("limbs.nails.colour", setOf((Comparable) "red", "notExisting"));
+        values = map.values(predicate);
+        assertThat(values, is(empty()));
         for (Body body : values) {
             System.out.println(body);
         }
