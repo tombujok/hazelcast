@@ -111,21 +111,17 @@ public class IndexImpl implements Index {
 
     private void createOrUpdateIndexStore(Object newValue, Object oldValue, QueryableEntry e) {
         newValue = sanitizeValue(newValue);
-        oldValue = sanitizeValue(oldValue);
-        if (newValue.getClass().isArray() ) {
-
+        if (oldValue == null) {
+            // new
+            indexStore.newIndex(newValue, e);
         } else {
-            if (oldValue == null) {
-                // new
-                indexStore.newIndex((Comparable) newValue, e);
-            } else {
-                // update
-                indexStore.updateIndex((Comparable) oldValue, (Comparable) newValue, e);
-            }
+            // update
+            oldValue = sanitizeValue(oldValue);
+            indexStore.updateIndex(oldValue, newValue, e);
         }
     }
 
-    private Object sanitizeValue(Object newValue) {
+    static Object sanitizeValue(Object newValue) {
         if (newValue == null) {
             newValue = NULL;
         } else if (newValue.getClass().isEnum()) {

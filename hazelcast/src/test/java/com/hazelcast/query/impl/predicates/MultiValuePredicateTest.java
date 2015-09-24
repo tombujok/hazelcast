@@ -35,6 +35,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         final HazelcastInstance instance = createHazelcastInstance();
         final IMap<Integer, Body> map = instance.getMap("map");
         map.addIndex("limbs(0).name", false);
+        map.addIndex("limbs.name", true);
 
         Body body1 = new Body("body1",
                 new Limb("ugly leg",

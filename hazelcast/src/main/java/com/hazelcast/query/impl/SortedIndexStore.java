@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+
 /**
  * Store indexes rankly.
  */
@@ -37,26 +38,47 @@ public class SortedIndexStore extends BaseIndexStore {
             = new ConcurrentSkipListMap<Comparable, ConcurrentMap<Data, QueryableEntry>>();
 
     @Override
-    public void newIndex(Comparable newValue, QueryableEntry record) {
+    public void newIndex(Object newValue, QueryableEntry record) {
         takeWriteLock();
         try {
             if (newValue instanceof IndexImpl.NullObject) {
                 recordsWithNullValue.put(record.getIndexKey(), record);
             } else {
-                ConcurrentMap<Data, QueryableEntry> records = recordMap.get(newValue);
-                if (records == null) {
-                    records = new ConcurrentHashMap<Data, QueryableEntry>(1, LOAD_FACTOR, 1);
-                    recordMap.put(newValue, records);
-                }
-                records.put(record.getIndexKey(), record);
+                mapAttributeToEntry(newValue, record);
             }
         } finally {
             releaseWriteLock();
         }
     }
 
+    private void mapAttributeToEntry(Object attribute, QueryableEntry entry) {
+        if (attribute.getClass().isArray()) {
+            Object[] attributes = (Object[]) attribute;
+            for (Object a : attributes) {
+                if (!(a instanceof Comparable)) {
+                    throw new IllegalArgumentException("Attribute " + a + " is not comparable");
+                }
+                a = IndexImpl.sanitizeValue(a);
+                mapSingleAttributeToEntry((Comparable) a, entry);
+            }
+        } else if (attribute instanceof Comparable) {
+            mapSingleAttributeToEntry((Comparable) attribute, entry);
+        } else {
+            throw new IllegalArgumentException("Attribute " + attribute + " is not comparable");
+        }
+    }
+
+    private void mapSingleAttributeToEntry(Comparable attribute, QueryableEntry entry) {
+        ConcurrentMap<Data, QueryableEntry> records = recordMap.get(attribute);
+        if (records == null) {
+            records = new ConcurrentHashMap<Data, QueryableEntry>(1, LOAD_FACTOR, 1);
+            recordMap.put(attribute, records);
+        }
+        records.put(entry.getIndexKey(), entry);
+    }
+
     @Override
-    public void updateIndex(Comparable oldValue, Comparable newValue, QueryableEntry entry) {
+    public void updateIndex(Object oldValue, Object newValue, QueryableEntry entry) {
         takeWriteLock();
         try {
             removeIndex(oldValue, entry.getIndexKey());
@@ -67,22 +89,43 @@ public class SortedIndexStore extends BaseIndexStore {
     }
 
     @Override
-    public void removeIndex(Comparable oldValue, Data indexKey) {
+    public void removeIndex(Object oldValue, Data indexKey) {
         takeWriteLock();
         try {
             if (oldValue instanceof IndexImpl.NullObject) {
                 recordsWithNullValue.remove(indexKey);
             } else {
-                ConcurrentMap<Data, QueryableEntry> records = recordMap.get(oldValue);
-                if (records != null) {
-                    records.remove(indexKey);
-                    if (records.size() == 0) {
-                        recordMap.remove(oldValue);
-                    }
-                }
+                removeMappingForAttribute(oldValue, indexKey);
             }
         } finally {
             releaseWriteLock();
+        }
+    }
+
+    private void removeMappingForAttribute(Object attribute, Data indexKey) {
+        if (attribute.getClass().isArray()) {
+            Object[] attributes = (Object[]) attribute;
+            for (Object a : attributes) {
+                if (!(a instanceof Comparable)) {
+                    throw new IllegalArgumentException("Attribute " + a + " is not comparable");
+                }
+                a = IndexImpl.sanitizeValue(a);
+                removeMappingForSingleAttribute((Comparable) a, indexKey);
+            }
+        } else if (attribute instanceof Comparable) {
+            removeMappingForSingleAttribute((Comparable) attribute, indexKey);
+        } else {
+            throw new IllegalArgumentException("Attribute " + attribute + " is not comparable");
+        }
+    }
+
+    private void removeMappingForSingleAttribute(Comparable attribute, Data indexKey) {
+        ConcurrentMap<Data, QueryableEntry> records = recordMap.get(attribute);
+        if (records != null) {
+            records.remove(indexKey);
+            if (records.size() == 0) {
+                recordMap.remove(attribute);
+            }
         }
     }
 
