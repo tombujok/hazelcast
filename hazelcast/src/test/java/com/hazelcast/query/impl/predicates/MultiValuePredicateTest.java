@@ -141,7 +141,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         }
         System.out.println("-----");
 
-        
+
         predicate = new ContainsAllPredicate("limbs.nails.colour", setOf((Comparable) "red", "blue"));
         values = map.values(predicate);
         assertThat(values, containsInAnyOrder(body1));
