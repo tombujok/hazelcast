@@ -41,6 +41,7 @@ public class GetterFactory {
             if (targetCollection == null || targetCollection.isEmpty()) {
                 return NullGetter.NULL_GETTER;
             }
+            //TODO: We should take a reducer suffix into consideration
             Object targetObject = targetCollection.iterator().next();
             if (targetObject == null) {
                 return NullGetter.NULL_GETTER;
