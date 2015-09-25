@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -145,21 +146,31 @@ public final class ReflectionHelper {
         try {
             Getter parent = null;
             List<String> possibleMethodNames = new ArrayList<String>(INITIAL_CAPACITY);
-            for (final String name : attribute.split("\\.")) {
-                String nameWithSuffix = removeReducerSuffix(name);
-                String reducerSuffix = (nameWithSuffix == name) ? null : getReducerSuffix(name);
+            for (final String fullname : attribute.split("\\.")) {
+                String nameWithoutSuffix = removeReducerSuffix(fullname);
+                String suffix = (nameWithoutSuffix == fullname) ? null : getReducerSuffix(fullname);
 
                 Getter localGetter = null;
                 possibleMethodNames.clear();
-                possibleMethodNames.add(nameWithSuffix);
-                final String camelName = Character.toUpperCase(nameWithSuffix.charAt(0)) + nameWithSuffix.substring(1);
+                possibleMethodNames.add(nameWithoutSuffix);
+                final String camelName = Character.toUpperCase(nameWithoutSuffix.charAt(0)) + nameWithoutSuffix.substring(1);
                 possibleMethodNames.add("get" + camelName);
                 possibleMethodNames.add("is" + camelName);
-                if (nameWithSuffix.equals(THIS_ATTRIBUTE_NAME)) {
+                if (nameWithoutSuffix.equals(THIS_ATTRIBUTE_NAME)) {
                     localGetter = GetterFactory.newThisGetter(parent, obj);
                 } else {
-                    if (clazz.isArray()) {
-                        clazz = clazz.getComponentType();
+//                    if (clazz.isArray()) {
+//                        clazz = clazz.getComponentType();
+//                    }
+//                    if (Collection.class.isAssignableFrom(clazz)) {
+//                        Collection currentCollection = (Collection) getCurrentObject(obj, parent);
+//                        clazz = getCollectionType(currentCollection);
+//                        if (clazz == null) {
+//                            return NULL_GETTER;
+//                        }
+//                    }
+                    if (parent != null) {
+                        clazz = parent.getReturnType();
                     }
 
                     if (localGetter == null) {
@@ -177,8 +188,11 @@ public final class ReflectionHelper {
                     }
                     if (localGetter == null) {
                         try {
-                            final Field field = clazz.getField(nameWithSuffix);
-                            localGetter = GetterFactory.newFieldGetter(parent, field, reducerSuffix);
+                            final Field field = clazz.getField(nameWithoutSuffix);
+                            localGetter = GetterFactory.newFieldGetter(obj, parent, field, suffix);
+                            if (localGetter == NULL_GETTER) {
+                                return localGetter;
+                            }
                             clazz = field.getType();
                         } catch (NoSuchFieldException ignored) {
                             EmptyStatement.ignore(ignored);
@@ -188,9 +202,12 @@ public final class ReflectionHelper {
                         Class c = clazz;
                         while (!c.isInterface() && !Object.class.equals(c)) {
                             try {
-                                final Field field = c.getDeclaredField(nameWithSuffix);
+                                final Field field = c.getDeclaredField(nameWithoutSuffix);
                                 field.setAccessible(true);
-                                localGetter = GetterFactory.newFieldGetter(parent, field, reducerSuffix);
+                                localGetter = GetterFactory.newFieldGetter(obj, parent, field, suffix);
+                                if (localGetter == NULL_GETTER) {
+                                    return NULL_GETTER;
+                                }
                                 clazz = field.getType();
                                 break;
                             } catch (NoSuchFieldException ignored) {
@@ -201,7 +218,7 @@ public final class ReflectionHelper {
                 }
                 if (localGetter == null) {
                     throw new IllegalArgumentException("There is no suitable accessor for '"
-                            + nameWithSuffix + "' on class '" + clazz + "'");
+                            + nameWithoutSuffix + "' on class '" + clazz + "'");
                 }
                 parent = localGetter;
             }
@@ -214,6 +231,28 @@ public final class ReflectionHelper {
         } catch (Throwable e) {
             throw new QueryException(e);
         }
+    }
+
+    //TODO: This does not belong here
+    static Class getCollectionType(Collection collection) {
+        if (collection == null || collection.size() == 0) {
+            return null;
+        }
+        Object objectFromCollection = collection.iterator().next();
+        if (objectFromCollection == null) {
+            return null;
+        }
+        return objectFromCollection.getClass();
+    }
+
+    private static Object getCurrentObject(Object obj, Getter parent) throws Exception {
+        Object currentObject;
+        if (parent == null) {
+            currentObject = obj;
+        } else {
+            currentObject = parent.getValue(obj);
+        }
+        return currentObject;
     }
 
     private static String removeReducerSuffix(String name) {

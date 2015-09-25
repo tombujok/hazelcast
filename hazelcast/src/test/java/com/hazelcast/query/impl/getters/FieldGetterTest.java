@@ -39,13 +39,13 @@ public class FieldGetterTest {
         Field coloursField = Nail.class.getDeclaredField("colours");
         Field fingerNameField = Finger.class.getDeclaredField("name");
 
-        FieldGetter limbGetter = new FieldGetter(null, limbsField);
-        FieldGetter fingersGetter = new FieldGetter(limbGetter, fingersField);
-        FieldGetter nailsGetter = new FieldGetter(fingersGetter, nailsField);
-        FieldGetter coloursGetter = new FieldGetter(nailsGetter, coloursField);
+        FieldGetter limbGetter = new FieldGetter(null, limbsField, null);
+        FieldGetter fingersGetter = new FieldGetter(limbGetter, fingersField, null);
+        FieldGetter nailsGetter = new FieldGetter(fingersGetter, nailsField, null);
+        FieldGetter coloursGetter = new FieldGetter(nailsGetter, coloursField, null);
 
         FieldGetter firstFingersGetter = new FieldGetter(limbGetter, fingersField, "(0)");
-        FieldGetter fingerNameGetter = new FieldGetter(firstFingersGetter, fingerNameField);
+        FieldGetter fingerNameGetter = new FieldGetter(firstFingersGetter, fingerNameField, null);
 
         Body body = new Body("cpt. cook",
                 new Limb("hook",

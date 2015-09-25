@@ -29,8 +29,10 @@ public final class ContainsPredicate extends AbstractPredicate implements Predic
         if (o == null) {
             return false;
         }
-        if (o.getClass().isArray()) {
+        if (o instanceof Object[]) {
             return ArrayUtils.contains((Object[])o, value);
+        } else if (o instanceof Collection) {
+            return ((Collection) o).contains(value);
         }
         throw new IllegalArgumentException("Attribute " + attribute + " is type " + o.getClass());
     }

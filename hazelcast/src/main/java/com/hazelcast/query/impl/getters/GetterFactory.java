@@ -1,11 +1,69 @@
 package com.hazelcast.query.impl.getters;
 
+import com.hazelcast.util.ExceptionUtil;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collection;
 
 public class GetterFactory {
-    public static Getter newFieldGetter(Getter parent, Field field, String reducerSuffix) {
+    public static Getter newFieldGetter(Object obj, Getter parent, Field field, String reducerSuffix) {
+        Class<?> type = field.getType();
+        if (Collection.class.isAssignableFrom(type)) {
+            Object currentObject = getCurrentObject(obj, parent);
+            if (currentObject == null) {
+                return NullGetter.NULL_GETTER;
+            }
+
+            if (currentObject instanceof Collection) {
+                Collection currectCollection = (Collection) currentObject;
+                if (currectCollection.isEmpty()) {
+                    return NullGetter.NULL_GETTER;
+                }
+                currentObject = currectCollection.iterator().next();
+            } else if (currentObject instanceof Object[]) {
+                Object[] currentArray = (Object[]) currentObject;
+                if (currentArray.length == 0) {
+                    return NullGetter.NULL_GETTER;
+                }
+                currentObject = currentArray[0];
+            }
+            if (currentObject == null) {
+                return NullGetter.NULL_GETTER;
+            }
+            Collection targetCollection;
+            try {
+                targetCollection = (Collection) field.get(currentObject);
+            } catch (IllegalAccessException e) {
+                //TODO: What to do with the Exception?
+                throw ExceptionUtil.rethrow(e);
+            }
+            if (targetCollection == null || targetCollection.isEmpty()) {
+                return NullGetter.NULL_GETTER;
+            }
+            Object targetObject = targetCollection.iterator().next();
+            if (targetObject == null) {
+                return NullGetter.NULL_GETTER;
+            }
+            return new FieldGetter(parent, field, reducerSuffix, targetObject.getClass());
+
+        }
         return new FieldGetter(parent, field, reducerSuffix);
+    }
+
+    private static Object getCurrentObject(Object obj, Getter parent) {
+        Object currentObject;
+        if (parent == null) {
+            currentObject = obj;
+        } else {
+            try {
+                currentObject = parent.getValue(obj);
+            } catch (Exception e) {
+                //TODO: What to do with the Exception?
+                throw ExceptionUtil.rethrow(e);
+            }
+        }
+        return currentObject;
     }
 
     public static Getter newMethodGetter(Getter parent, Method method) {

@@ -19,6 +19,8 @@ package com.hazelcast.query.impl.getters;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 public class FieldGetter extends Getter {
@@ -27,22 +29,19 @@ public class FieldGetter extends Getter {
     private final Field field;
     private final int position;
     private final boolean isArray;
+    private final boolean isCollection;
     private final Class resultType;
 
-
-    public FieldGetter(Getter parent, Field field) {
-        this(parent, field, null);
-    }
-
-    public FieldGetter(Getter parent, Field field, String reducer) {
+    public FieldGetter(Getter parent, Field field, String reducer, Class resultType) {
         super(parent);
         this.field = field;
         this.isArray = field.getType().isArray();
-        this.resultType = isArray ? field.getType().getComponentType() : field.getType();
+        this.isCollection = Collection.class.isAssignableFrom(field.getType());
+        this.resultType = resultType == null ? (isArray ? field.getType().getComponentType() : field.getType()) : resultType;
 
         if (reducer != null) {
-            if (!field.getType().isArray()) {
-                throw new IllegalStateException("Reducer is allowed only when extracting from arrays");
+            if (!isArray && !isCollection) {
+                throw new IllegalStateException("Reducer is allowed only when extracting from arrays or collections");
             }
             String stringValue = reducer.substring(1, reducer.length() - 1);
             position = Integer.parseInt(stringValue);
@@ -51,64 +50,120 @@ public class FieldGetter extends Getter {
         }
     }
 
+
+    public FieldGetter(Getter parent, Field field, String reducer) {
+        this(parent, field, reducer, null);
+    }
+
     @Override
     Object getValue(Object obj) throws Exception {
-        Object currentObject = getCurrentObject(obj);
-        if (currentObject == null) {
+        Object parentObject = getParentObject(obj);
+        if (parentObject == null) {
             return null;
         }
-        if (currentObject instanceof Object[]) {
-            return extractFromArray((Object[]) currentObject);
+        if (parentObject instanceof Object[]) {
+            return extractFromArray((Object[]) parentObject);
         }
-        return extractFromSingleObject(currentObject);
+        if (parentObject instanceof Collection) {
+            return extractFromCollection((Collection) parentObject);
+        }
+        return extractFromSingleObject(parentObject);
+    }
+
+    private Object extractFromCollection(Collection currentCollection) throws IllegalAccessException {
+        List<Object> result = new ArrayList<Object>();
+        for (Object o : currentCollection) {
+            collectResult(result, o);
+        }
+        return result.toArray(new Object[result.size()]);
     }
 
     private Object extractFromArray(Object[] currentArray) throws IllegalAccessException {
         List<Object> result = new ArrayList<Object>();
         for (Object o : currentArray) {
-            Object fieldObject = field.get(o);
-            if (fieldObject != null) {
-                if (isArray) {
-                    Object[] fieldArray = (Object[]) fieldObject;
-                    if (position == ALL_POSITIONS) {
-                        for (Object current : fieldArray) {
-                            if (current != null) {
-                                result.add(current);
-                            }
-                        }
-                    } else {
-                        if (fieldArray.length > position) {
-                            result.add(fieldArray[position]);
-                        }
-                    }
-                } else {
-                    result.add(fieldObject);
-                }
-            }
+            collectResult(result, o);
         }
         return result.toArray(new Object[result.size()]);
     }
 
+    private void collectResult(List<Object> result, Object o) throws IllegalAccessException {
+        Object fieldObject = field.get(o);
+        if (fieldObject != null) {
+            if (isArray) {
+                Object[] fieldArray = (Object[]) fieldObject;
+                if (position == ALL_POSITIONS) {
+                    for (Object current : fieldArray) {
+                        if (current != null) {
+                            result.add(current);
+                        }
+                    }
+                } else {
+                    if (fieldArray.length > position) {
+                        result.add(fieldArray[position]);
+                    }
+                }
+            } else if (isCollection) {
+                Collection collection = (Collection) fieldObject;
+                if (position == ALL_POSITIONS) {
+                    result.addAll(collection);
+                } else {
+                    Object itemAtPosition = getItemAtPosition(collection, position);
+                    if (itemAtPosition != null) {
+                        result.add(itemAtPosition);
+                    }
+                }
+            } else {
+                result.add(fieldObject);
+            }
+        }
+    }
+
     private Object extractFromSingleObject(Object currentObject) throws IllegalAccessException {
         Object o = field.get(currentObject);
+        if (o == null) {
+            return null;
+        }
         if (isArray) {
-            if (o == null) {
-                return null;
+            if (position == ALL_POSITIONS) {
+                return o;
             }
             Object[] array = (Object[]) o;
-            if (position == ALL_POSITIONS) {
-                return array;
-            } else if (array.length > position) {
+            if (array.length > position) {
                 return array[position];
             } else {
                 return null;
             }
+        } else if (isCollection) {
+            if (position == ALL_POSITIONS) {
+                return o;
+            }
+            Collection collection = (Collection) o;
+            return getItemAtPosition(collection, position);
         } else {
             return o;
         }
     }
 
-    private Object getCurrentObject(Object obj) throws Exception {
+    private Object getItemAtPosition(Collection collection, int position) {
+        if (collection == null) {
+            return null;
+        }
+        if (collection.size() > position) {
+            if (collection instanceof List) {
+                return ((List) collection).get(position);
+            } else {
+                Iterator iterator = collection.iterator();
+                Object item = null;
+                for (int i = 0; i < position + 1; i++) {
+                    item = iterator.next();
+                }
+                return item;
+            }
+        }
+        return null;
+    }
+
+    private Object getParentObject(Object obj) throws Exception {
         return parent != null ? parent.getValue(obj) : obj;
     }
 
