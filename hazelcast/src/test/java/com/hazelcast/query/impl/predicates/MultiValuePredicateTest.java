@@ -34,8 +34,8 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
     public void testCollectionPredicate() throws Exception {
         final HazelcastInstance instance = createHazelcastInstance();
         final IMap<Integer, Body> map = instance.getMap("map");
-//        map.addIndex("limbs(0).name", false);
-//        map.addIndex("limbs.name", true);
+        map.addIndex("limbs[0].name", false);
+        map.addIndex("limbs.name", true);
 
         Body body1 = new Body("body1")
                 .addLimb(new Limb("ugly leg")
@@ -85,7 +85,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         }
         System.out.println("-----");
 
-        predicate = new EqualPredicate("limbs(0).name", "ugly leg");
+        predicate = new EqualPredicate("limbs[0].name", "ugly leg");
         values = map.values(predicate);
         assertThat(values, containsInAnyOrder(body1));
         for (Body body : values) {
@@ -93,7 +93,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         }
         System.out.println("-----");
 
-        predicate = new EqualPredicate("limbs(4).name", "ugly leg");
+        predicate = new EqualPredicate("limbs[4].name", "ugly leg");
         values = map.values(predicate);
         assertThat(values, empty());
         for (Body body : values) {
@@ -102,7 +102,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         System.out.println("-----");
 
 
-        predicate = new EqualPredicate("limbs(1).name", "ugly leg");
+        predicate = new EqualPredicate("limbs[1].name", "ugly leg");
         values = map.values(predicate);
         assertThat(values, contains(body2));
         for (Body body : values) {
@@ -111,7 +111,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         System.out.println("-----");
 
 
-        predicate = new ContainsPredicate("limbs(0).nails.colour", "yellow");
+        predicate = new ContainsPredicate("limbs[0].nails.colour", "yellow");
         values = map.values(predicate);
         assertThat(values, contains(body2));
         for (Body body : values) {
@@ -119,7 +119,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         }
         System.out.println("-----");
 
-        predicate = new EqualPredicate("limbs(0).name", null);
+        predicate = new EqualPredicate("limbs[0].name", null);
         values = map.values(predicate);
         assertThat(values, contains(body3));
         for (Body body : values) {
@@ -157,7 +157,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
     public void testArrayPredicate() throws Exception {
         final HazelcastInstance instance = createHazelcastInstance();
         final IMap<Integer, ArrayBody> map = instance.getMap("map");
-        map.addIndex("limbs(0).name", false);
+        map.addIndex("limbs[0].name", false);
         map.addIndex("limbs.name", true);
 
         ArrayBody body1 = new ArrayBody("body1",
@@ -210,7 +210,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         }
         System.out.println("-----");
 
-        predicate = new EqualPredicate("limbs(0).name", "ugly leg");
+        predicate = new EqualPredicate("limbs[0].name", "ugly leg");
         values = map.values(predicate);
         assertThat(values, containsInAnyOrder(body1));
         for (ArrayBody body : values) {
@@ -218,7 +218,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         }
         System.out.println("-----");
 
-        predicate = new EqualPredicate("limbs(4).name", "ugly leg");
+        predicate = new EqualPredicate("limbs[4].name", "ugly leg");
         values = map.values(predicate);
         assertThat(values, empty());
         for (ArrayBody body : values) {
@@ -227,7 +227,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         System.out.println("-----");
 
 
-        predicate = new EqualPredicate("limbs(1).name", "ugly leg");
+        predicate = new EqualPredicate("limbs[1].name", "ugly leg");
         values = map.values(predicate);
         assertThat(values, contains(body2));
         for (ArrayBody body : values) {
@@ -236,7 +236,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         System.out.println("-----");
 
 
-        predicate = new ContainsPredicate("limbs(0).nails.colour", "yellow");
+        predicate = new ContainsPredicate("limbs[0].nails.colour", "yellow");
         values = map.values(predicate);
         assertThat(values, contains(body2));
         for (ArrayBody body : values) {
@@ -244,7 +244,7 @@ public class MultiValuePredicateTest extends HazelcastTestSupport {
         }
         System.out.println("-----");
 
-        predicate = new EqualPredicate("limbs(0).name", null);
+        predicate = new EqualPredicate("limbs[0].name", null);
         values = map.values(predicate);
         assertThat(values, contains(body3));
         for (ArrayBody body : values) {

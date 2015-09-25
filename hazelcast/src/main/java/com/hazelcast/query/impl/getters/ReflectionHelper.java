@@ -256,7 +256,7 @@ public final class ReflectionHelper {
     }
 
     private static String removeReducerSuffix(String name) {
-        int indexOfOpeningBracket = name.indexOf('(');
+        int indexOfOpeningBracket = name.indexOf('[');
         if (indexOfOpeningBracket == -1) {
             return name;
         }
@@ -264,7 +264,7 @@ public final class ReflectionHelper {
     }
 
     private static String getReducerSuffix(String name) {
-        int indexOfOpeningBracket = name.indexOf('(');
+        int indexOfOpeningBracket = name.indexOf('[');
         return name.substring(indexOfOpeningBracket, name.length());
     }
 
