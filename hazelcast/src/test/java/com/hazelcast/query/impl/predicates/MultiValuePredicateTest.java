@@ -3,6 +3,7 @@ package com.hazelcast.query.impl.predicates;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.Predicate;
+import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.annotation.QuickTest;
@@ -28,9 +29,42 @@ import static org.hamcrest.Matchers.is;
 @Category(QuickTest.class)
 public class MultiValuePredicateTest extends HazelcastTestSupport {
 
-
-
     @Test
+    public void testCollectionPredicate_andSQL() throws Exception {
+        final HazelcastInstance instance = createHazelcastInstance();
+        final IMap<Integer, Body> map = instance.getMap("map");
+
+        Body body1 = new Body("body1")
+                .addLimb(new Limb("ugly leg")
+                                .addNail(new Nail("red"))
+                                .addNail(new Nail("blue"))
+                )
+                .addLimb(new Limb("missing hand")
+                                .addNail(new Nail("yellow"))
+                );
+        Body body2 = new Body("body2")
+                .addLimb(new Limb("hook")
+                        .addNail(new Nail("yellow"))
+                        .addNail(new Nail("red")))
+                .addLimb(new Limb("ugly leg"));
+
+        Body body3 = new Body("body3")
+                .insertStuffIntoPocket("left pocket", "beer");
+
+
+        map.put(1, body1);
+        map.put(3, body2);
+        map.put(2, body3);
+
+        SqlPredicate predicate = new SqlPredicate("limbs[*].name = 'missing hand'");
+        Collection<Body> values = map.values(predicate);
+
+        assertThat(values, contains(body1));
+    }
+
+
+
+        @Test
     public void testCollectionPredicate() throws Exception {
         final HazelcastInstance instance = createHazelcastInstance();
         final IMap<Integer, Body> map = instance.getMap("map");
