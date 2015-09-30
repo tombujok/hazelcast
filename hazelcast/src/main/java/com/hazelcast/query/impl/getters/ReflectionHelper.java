@@ -159,16 +159,7 @@ public final class ReflectionHelper {
                 if (nameWithoutSuffix.equals(THIS_ATTRIBUTE_NAME)) {
                     localGetter = GetterFactory.newThisGetter(parent, obj);
                 } else {
-//                    if (clazz.isArray()) {
-//                        clazz = clazz.getComponentType();
-//                    }
-//                    if (Collection.class.isAssignableFrom(clazz)) {
-//                        Collection currentCollection = (Collection) getCurrentObject(obj, parent);
-//                        clazz = getCollectionType(currentCollection);
-//                        if (clazz == null) {
-//                            return NULL_GETTER;
-//                        }
-//                    }
+
                     if (parent != null) {
                         clazz = parent.getReturnType();
                     }
@@ -231,28 +222,6 @@ public final class ReflectionHelper {
         } catch (Throwable e) {
             throw new QueryException(e);
         }
-    }
-
-    //TODO: This does not belong here
-    static Class getCollectionType(Collection collection) {
-        if (collection == null || collection.size() == 0) {
-            return null;
-        }
-        Object objectFromCollection = collection.iterator().next();
-        if (objectFromCollection == null) {
-            return null;
-        }
-        return objectFromCollection.getClass();
-    }
-
-    private static Object getCurrentObject(Object obj, Getter parent) throws Exception {
-        Object currentObject;
-        if (parent == null) {
-            currentObject = obj;
-        } else {
-            currentObject = parent.getValue(obj);
-        }
-        return currentObject;
     }
 
     private static String removeReducerSuffix(String name) {

@@ -9,27 +9,21 @@ import java.util.Collection;
 public class GetterFactory {
     public static Getter newFieldGetter(Object obj, Getter parent, Field field, String reducerSuffix) {
         Class<?> type = field.getType();
-        if (Collection.class.isAssignableFrom(type)) {
+        if (Collection.class.isAssignableFrom(type) && reducerSuffix != null) {
             Object currentObject = getCurrentObject(obj, parent);
             if (currentObject == null) {
                 return NullGetter.NULL_GETTER;
             }
 
-            if (currentObject instanceof Collection) {
-                Collection currectCollection = (Collection) currentObject;
-                if (currectCollection.isEmpty()) {
+            if (currentObject instanceof MultiResultCollector) {
+                MultiResultCollector multiResultCollector = (MultiResultCollector) currentObject;
+                if (multiResultCollector.isEmpty()) {
                     return NullGetter.NULL_GETTER;
                 }
-                currentObject = currectCollection.iterator().next();
-            } else if (currentObject instanceof Object[]) {
-                Object[] currentArray = (Object[]) currentObject;
-                if (currentArray.length == 0) {
+                currentObject = multiResultCollector.getResults().iterator().next();
+                if (currentObject == null) {
                     return NullGetter.NULL_GETTER;
                 }
-                currentObject = currentArray[0];
-            }
-            if (currentObject == null) {
-                return NullGetter.NULL_GETTER;
             }
             Collection targetCollection;
             try {

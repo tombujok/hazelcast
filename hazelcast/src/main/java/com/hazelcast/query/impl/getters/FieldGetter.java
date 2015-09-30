@@ -18,36 +18,50 @@ package com.hazelcast.query.impl.getters;
 
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 public class FieldGetter extends Getter {
-    private static final int ALL_POSITIONS = -1;
+    private static final int DO_NOT_REDUCE = -1;
+    private static final int REDUCE_EVERYTHING = -2;
 
     private final Field field;
     private final int position;
-    private final boolean isArray;
-    private final boolean isCollection;
     private final Class resultType;
 
     public FieldGetter(Getter parent, Field field, String reducer, Class resultType) {
         super(parent);
         this.field = field;
-        this.isArray = field.getType().isArray();
-        this.isCollection = Collection.class.isAssignableFrom(field.getType());
-        this.resultType = resultType == null ? (isArray ? field.getType().getComponentType() : field.getType()) : resultType;
+        boolean isArray = field.getType().isArray();
+        boolean isCollection = Collection.class.isAssignableFrom(field.getType());
 
         if (reducer != null) {
             if (!isArray && !isCollection) {
                 throw new IllegalStateException("Reducer is allowed only when extracting from arrays or collections");
             }
             String stringValue = reducer.substring(1, reducer.length() - 1);
-            position = Integer.parseInt(stringValue);
+            if ("*".equals(stringValue)) {
+                position = REDUCE_EVERYTHING;
+            } else {
+                position = Integer.parseInt(stringValue);
+            }
         } else {
-            position = ALL_POSITIONS;
+            position = DO_NOT_REDUCE;
         }
+
+        this.resultType = createResultType(field, resultType);
+    }
+
+    private Class createResultType(Field field, Class resultType) {
+        if (resultType != null) {
+            //result type as been set explicitly
+            return resultType;
+        }
+        if (position == DO_NOT_REDUCE) {
+            return field.getType();
+        }
+        return field.getType().getComponentType();
     }
 
 
@@ -61,107 +75,97 @@ public class FieldGetter extends Getter {
         if (parentObject == null) {
             return null;
         }
-        if (parentObject instanceof Object[]) {
-            return extractFromArray((Object[]) parentObject);
+        if (parentObject instanceof MultiResultCollector) {
+            return extractFromMultiResult((MultiResultCollector) parentObject);
         }
-        if (parentObject instanceof Collection) {
-            return extractFromCollection((Collection) parentObject);
-        }
-        return extractFromSingleObject(parentObject);
-    }
 
-    private Object extractFromCollection(Collection currentCollection) throws IllegalAccessException {
-        List<Object> result = new ArrayList<Object>();
-        for (Object o : currentCollection) {
-            collectResult(result, o);
-        }
-        return result.toArray(new Object[result.size()]);
-    }
-
-    private Object extractFromArray(Object[] currentArray) throws IllegalAccessException {
-        List<Object> result = new ArrayList<Object>();
-        for (Object o : currentArray) {
-            collectResult(result, o);
-        }
-        return result.toArray(new Object[result.size()]);
-    }
-
-    private void collectResult(List<Object> result, Object o) throws IllegalAccessException {
-        Object fieldObject = field.get(o);
-        if (fieldObject != null) {
-            if (isArray) {
-                Object[] fieldArray = (Object[]) fieldObject;
-                if (position == ALL_POSITIONS) {
-                    for (Object current : fieldArray) {
-                        if (current != null) {
-                            result.add(current);
-                        }
-                    }
-                } else {
-                    if (fieldArray.length > position) {
-                        result.add(fieldArray[position]);
-                    }
-                }
-            } else if (isCollection) {
-                Collection collection = (Collection) fieldObject;
-                if (position == ALL_POSITIONS) {
-                    result.addAll(collection);
-                } else {
-                    Object itemAtPosition = getItemAtPosition(collection, position);
-                    if (itemAtPosition != null) {
-                        result.add(itemAtPosition);
-                    }
-                }
-            } else {
-                result.add(fieldObject);
-            }
-        }
-    }
-
-    private Object extractFromSingleObject(Object currentObject) throws IllegalAccessException {
-        Object o = field.get(currentObject);
-        if (o == null) {
-            return null;
-        }
-        if (isArray) {
-            if (position == ALL_POSITIONS) {
-                return o;
-            }
-            Object[] array = (Object[]) o;
-            if (array.length > position) {
-                return array[position];
-            } else {
-                return null;
-            }
-        } else if (isCollection) {
-            if (position == ALL_POSITIONS) {
-                return o;
-            }
-            Collection collection = (Collection) o;
-            return getItemAtPosition(collection, position);
-        } else {
+        Object o = field.get(parentObject);
+        if (position == DO_NOT_REDUCE) {
             return o;
         }
+        if (position == REDUCE_EVERYTHING) {
+            MultiResultCollector collector = new MultiResultCollector();
+            reduceInto(collector, o);
+            return collector;
+        }
+        return getItemAtPosition(o, position);
     }
 
-    private Object getItemAtPosition(Collection collection, int position) {
-        if (collection == null) {
+    private Object extractFromMultiResult(MultiResultCollector parentMultiResult) throws IllegalAccessException {
+        MultiResultCollector collector = new MultiResultCollector();
+        for (Object parentResult : parentMultiResult.getResults()) {
+            collectResult(collector, parentResult);
+        }
+
+        return collector;
+    }
+
+    private void collectResult(MultiResultCollector collector, Object parentResult) throws IllegalAccessException {
+        Object currentObject = field.get(parentResult);
+        if (currentObject == null) {
+            return;
+        }
+        if (shouldReduce()) {
+            reduceInto(collector, currentObject);
+        } else {
+            collector.collect(currentObject);
+        }
+    }
+
+    private void reduceInto(MultiResultCollector collector, Object currentObject) {
+        if (position != REDUCE_EVERYTHING) {
+            Object item = getItemAtPosition(currentObject, position);
+            collector.collect(item);
+            return;
+        }
+
+        if (currentObject instanceof Collection) {
+            Collection collection = (Collection) currentObject;
+            for (Object o : collection) {
+                collector.collect(o);
+            }
+        } else if (currentObject instanceof Object[]) {
+            Object[] array = (Object[]) currentObject;
+            for (int i = 0; i < array.length; i++) {
+                collector.collect(array[i]);
+            }
+        } else {
+            throw new IllegalArgumentException("Can't reduce result from a type " + currentObject.getClass()
+                    + " Collections and Arrays are supported only");
+        }
+    }
+
+    private Object getItemAtPosition(Object object, int position) {
+        if (object instanceof Collection) {
+            Collection collection = (Collection) object;
+            if (collection.size() > position) {
+                if (collection instanceof List) {
+                    return ((List) collection).get(position);
+                } else {
+                    Iterator iterator = collection.iterator();
+                    Object item = null;
+                    for (int i = 0; i < position + 1; i++) {
+                        item = iterator.next();
+                    }
+                    return item;
+                }
+            }
+            return null;
+        } else if (object instanceof Object[]) {
+            Object[] array = (Object[]) object;
+            if (array.length > position) {
+                return array[position];
+            }
             return null;
         }
-        if (collection.size() > position) {
-            if (collection instanceof List) {
-                return ((List) collection).get(position);
-            } else {
-                Iterator iterator = collection.iterator();
-                Object item = null;
-                for (int i = 0; i < position + 1; i++) {
-                    item = iterator.next();
-                }
-                return item;
-            }
-        }
-        return null;
+        throw new IllegalArgumentException("Cannot extract an element from class of type" + object.getClass()
+                + " Collections and Arrays are supported only");
     }
+
+    private boolean shouldReduce() {
+        return position != DO_NOT_REDUCE;
+    }
+
 
     private Object getParentObject(Object obj) throws Exception {
         return parent != null ? parent.getValue(obj) : obj;

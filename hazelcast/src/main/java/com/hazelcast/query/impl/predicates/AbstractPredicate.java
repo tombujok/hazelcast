@@ -87,6 +87,10 @@ public abstract class AbstractPredicate implements IndexAwarePredicate, DataSeri
     protected Object readAttribute(Map.Entry entry) {
         QueryableEntry queryableEntry = (QueryableEntry) entry;
         Object val = queryableEntry.getAttribute(attribute);
+        return convertAttribute(val);
+    }
+
+    protected Object convertAttribute(Object val) {
         if (val != null && val.getClass().isEnum()) {
             val = val.toString();
         }
