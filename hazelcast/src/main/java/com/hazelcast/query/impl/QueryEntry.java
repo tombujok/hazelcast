@@ -16,15 +16,16 @@
 
 package com.hazelcast.query.impl;
 
-import static com.hazelcast.query.QueryConstants.KEY_ATTRIBUTE_NAME;
-import static com.hazelcast.query.QueryConstants.THIS_ATTRIBUTE_NAME;
-
 import com.hazelcast.internal.serialization.PortableContext;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.Portable;
 import com.hazelcast.query.QueryException;
+import com.hazelcast.query.extractor.ExtractionEngine;
 import com.hazelcast.query.impl.getters.ReflectionHelper;
+
+import static com.hazelcast.query.QueryConstants.KEY_ATTRIBUTE_NAME;
+import static com.hazelcast.query.QueryConstants.THIS_ATTRIBUTE_NAME;
 
 /**
  * Entry of the Query.
@@ -35,12 +36,13 @@ public class QueryEntry implements QueryableEntry {
     private Object key;
     private Object value;
     private SerializationService serializationService;
+    private Extractors extractors;
 
     public QueryEntry() {
     }
 
-    public QueryEntry(SerializationService serializationService, Data indexKey, Object key, Object value) {
-        init(serializationService, indexKey, key, value);
+    public QueryEntry(SerializationService serializationService, Data indexKey, Object key, Object value, Extractors extractors) {
+        init(serializationService, indexKey, key, value, extractors);
     }
 
     /**
@@ -60,7 +62,7 @@ public class QueryEntry implements QueryableEntry {
      * </code>
      * </pre>
      */
-    public void init(SerializationService serializationService, Data indexKey, Object key, Object value) {
+    public void init(SerializationService serializationService, Data indexKey, Object key, Object value, Extractors extractors) {
         if (indexKey == null) {
             throw new IllegalArgumentException("index keyData cannot be null");
         }
@@ -73,6 +75,7 @@ public class QueryEntry implements QueryableEntry {
 
         this.key = key;
         this.value = value;
+        this.extractors = extractors;
     }
 
     @Override
@@ -98,54 +101,9 @@ public class QueryEntry implements QueryableEntry {
 
     @Override
     public Object getAttribute(String attributeName) throws QueryException {
-        return extractAttribute(attributeName, key, value, serializationService);
+        return ExtractionEngine.extractAttribute(extractors, attributeName, key, value, serializationService);
     }
 
-    public static Object extractAttribute(String attributeName, Object key, Object value, SerializationService ss) {
-        if (KEY_ATTRIBUTE_NAME.equals(attributeName)) {
-            return ss.toObject(key);
-        } else if (THIS_ATTRIBUTE_NAME.equals(attributeName)) {
-            return ss.toObject(value);
-        }
-
-        boolean isKey = isKey(attributeName);
-        attributeName = getAttributeName(isKey, attributeName);
-        Object target = isKey ? key : value;
-
-        if(target instanceof Portable || target instanceof Data) {
-            Data targetData = ss.toData(target);
-            if(targetData.isPortable()) {
-                return extractViaPortable(attributeName, targetData, ss);
-            }
-        }
-
-        Object targetObject = ss.toObject(target);
-
-        return extractViaReflection(attributeName, targetObject);
-    }
-
-    static Comparable extractViaPortable(String attributeName, Data data, SerializationService ss) {
-        try {
-            return PortableExtractor.extractValue(ss, data, attributeName);
-        } catch (QueryException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new QueryException(e);
-        }
-    }
-
-    // This method is very inefficient because:
-    // lot of time is spend on retrieving field/method and it isn't cached
-    // the actual invocation on the Field, Method is also is quite expensive.
-    public static Object extractViaReflection(String attributeName, Object obj) {
-        try {
-            return ReflectionHelper.extractValue(obj, attributeName);
-        } catch (QueryException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new QueryException(e);
-        }
-    }
 
     @Override
     public AttributeType getAttributeType(String attributeName) {
@@ -155,14 +113,14 @@ public class QueryEntry implements QueryableEntry {
             return ReflectionHelper.getAttributeType(getValue().getClass());
         }
 
-        boolean isKey = isKey(attributeName);
+        boolean isKey = ExtractionEngine.isKey(attributeName);
         attributeName = getAttributeName(isKey, attributeName);
 
         Object target = isKey ? key : value;
 
-        if(target instanceof Portable || target instanceof Data) {
+        if (target instanceof Portable || target instanceof Data) {
             Data data = serializationService.toData(target);
-            if(data.isPortable()) {
+            if (data.isPortable()) {
                 PortableContext portableContext = serializationService.getPortableContext();
                 return PortableExtractor.getAttributeType(portableContext, data, attributeName);
             }
@@ -179,9 +137,6 @@ public class QueryEntry implements QueryableEntry {
         }
     }
 
-    public static boolean isKey(String attributeName) {
-        return attributeName.startsWith(KEY_ATTRIBUTE_NAME);
-    }
 
     @Override
     public Data getIndexKey() {

@@ -116,7 +116,7 @@ public class PartitionWideEntryOperation extends AbstractMultipleEntryOperation 
             return true;
         }
         final SerializationService ss = getNodeEngine().getSerializationService();
-        QueryEntry queryEntry = new QueryEntry(ss, dataKey, key, value);
+        QueryEntry queryEntry = new QueryEntry(ss, dataKey, key, value, mapContainer.getExtractors());
         return getPredicate().apply(queryEntry);
     }
 

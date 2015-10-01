@@ -49,7 +49,7 @@ public class QueryEntryTest extends HazelcastTestSupport {
 
         SerializableObject key = new SerializableObject();
         Portable value = new SampleObjects.PortableEmployee(30, "peter");
-        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value);
+        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value, Extractors.empty());
 
         // in the portable-data, the attribute 'name' is called 'n'. So if we can retrieve on n
         // correctly it shows that we have used the Portable data, not the actual Portable object
@@ -64,7 +64,7 @@ public class QueryEntryTest extends HazelcastTestSupport {
 
         Portable key = new SampleObjects.PortableEmployee(30, "peter");
         SerializableObject value = new SerializableObject();
-        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value);
+        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value, Extractors.empty());
 
         // in the portable-data, the attribute 'name' is called 'n'. So if we can retrieve on n
         // correctly it shows that we have used the Portable data, not the actual Portable object
@@ -79,7 +79,7 @@ public class QueryEntryTest extends HazelcastTestSupport {
 
         Portable key = new SampleObjects.PortableEmployee(30, "peter");
         SerializableObject value = new SerializableObject();
-        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value);
+        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value, Extractors.empty());
 
         Object result = queryEntry.getAttribute(QueryConstants.KEY_ATTRIBUTE_NAME + ".n");
 
@@ -93,7 +93,7 @@ public class QueryEntryTest extends HazelcastTestSupport {
         SerializableObject key = new SerializableObject();
         SerializableObject value = new SerializableObject();
         value.name = "somename";
-        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value);
+        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value, Extractors.empty());
 
         Object result = queryEntry.getAttribute("name");
 
@@ -112,7 +112,7 @@ public class QueryEntryTest extends HazelcastTestSupport {
         SerializableObject value = new SerializableObject();
         value.name = "somename";
         key.name = "somekey";
-        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value);
+        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, key, value, Extractors.empty());
 
         Object result = queryEntry.getAttribute(QueryConstants.KEY_ATTRIBUTE_NAME + ".name");
 
@@ -130,12 +130,12 @@ public class QueryEntryTest extends HazelcastTestSupport {
 
         Data dataKey = serializationService.toData("dataKey");
         Data dataValue = serializationService.toData("dataValue");
-        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, dataKey, dataValue);
+        QueryEntry queryEntry = new QueryEntry(serializationService, indexedKey, dataKey, dataValue, Extractors.empty());
 
         Object objectValue = queryEntry.getValue();
         Object objectKey = queryEntry.getKey();
 
-        queryEntry.init(serializationService, indexedKey, objectKey, objectValue);
+        queryEntry.init(serializationService, indexedKey, objectKey, objectValue, Extractors.empty());
 
         // compare references of objects since they should be cloned after QueryEntry#init call.
         assertTrue("Old dataKey should not be here", dataKey != queryEntry.getKeyData());

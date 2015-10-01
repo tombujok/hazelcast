@@ -35,6 +35,7 @@ import com.hazelcast.query.SampleObjects.ObjectWithSqlDate;
 import com.hazelcast.query.SampleObjects.ObjectWithSqlTimestamp;
 import com.hazelcast.query.SampleObjects.ObjectWithUUID;
 import com.hazelcast.query.impl.DateHelperTest;
+import com.hazelcast.query.impl.Extractors;
 import com.hazelcast.query.impl.QueryEntry;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.annotation.QuickTest;
@@ -364,7 +365,7 @@ public class SqlPredicateTest {
     }
 
     private Map.Entry createEntry(final Object key, final Object value) {
-        return new QueryEntry(ss, toData(key), key, value);
+        return new QueryEntry(ss, toData(key), key, value, Extractors.empty());
     }
 
     private void assertSqlTrue(String s, Object value) {

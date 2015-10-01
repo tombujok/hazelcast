@@ -114,7 +114,7 @@ public class MapEventPublisherImpl implements MapEventPublisher {
 
         for (final EventRegistration candidate : registrations) {
             final EventFilter filter = candidate.getFilter();
-            final Result result = applyEventFilter(filter, syntheticEvent, dataKey, dataOldValue, dataValue, eventType);
+            final Result result = applyEventFilter(mapName, filter, syntheticEvent, dataKey, dataOldValue, dataValue, eventType);
 
             registrationsWithValue = initRegistrationsWithValue(registrationsWithValue, result);
             registrationsWithoutValue = initRegistrationsWithoutValue(registrationsWithoutValue, result);
@@ -194,7 +194,7 @@ public class MapEventPublisherImpl implements MapEventPublisher {
         return !(collection == null || collection.isEmpty());
     }
 
-    protected Result applyEventFilter(EventFilter filter, boolean syntheticEvent, Data dataKey,
+    protected Result applyEventFilter(String mapName, EventFilter filter, boolean syntheticEvent, Data dataKey,
                                       Data dataOldValue, Data dataValue, EntryEventType eventType) {
 
         if (filter instanceof MapPartitionLostEventFilter) {
@@ -218,7 +218,7 @@ public class MapEventPublisherImpl implements MapEventPublisher {
 
 
         if (filter instanceof QueryEventFilter) {
-            return processQueryEventFilter(filter, eventType, dataKey, dataOldValue, dataValue);
+            return processQueryEventFilter(mapName, filter, eventType, dataKey, dataOldValue, dataValue);
         }
 
         if (filter instanceof EntryEventFilter) {
@@ -286,7 +286,7 @@ public class MapEventPublisherImpl implements MapEventPublisher {
         return Result.NO_VALUE_INCLUDED;
     }
 
-    private Result processQueryEventFilter(EventFilter filter, EntryEventType eventType,
+    private Result processQueryEventFilter(String mapName, EventFilter filter, EntryEventType eventType,
                                            final Data dataKey, Data dataOldValue, Data dataValue) {
         final NodeEngine nodeEngine = mapServiceContext.getNodeEngine();
         final SerializationService serializationService = nodeEngine.getSerializationService();
@@ -297,7 +297,7 @@ public class MapEventPublisherImpl implements MapEventPublisher {
             testValue = dataValue;
         }
         final QueryEventFilter queryEventFilter = (QueryEventFilter) filter;
-        final QueryEntry entry = new QueryEntry(serializationService, dataKey, dataKey, testValue);
+        final QueryEntry entry = new QueryEntry(serializationService, dataKey, dataKey, testValue, mapServiceContext.getMapContainer(mapName).getExtractors());
         if (queryEventFilter.eval(entry)) {
             return queryEventFilter.isIncludeValue() ? Result.VALUE_INCLUDED : Result.NO_VALUE_INCLUDED;
         }

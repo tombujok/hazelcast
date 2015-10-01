@@ -158,7 +158,7 @@ abstract class AbstractRecordStore implements RecordStore {
         final Indexes indexes = mapContainer.getIndexes();
         if (indexes.hasIndex()) {
             SerializationService ss = mapServiceContext.getNodeEngine().getSerializationService();
-            QueryableEntry queryableEntry = new QueryEntry(ss, dataKey, dataKey, record.getValue());
+            QueryableEntry queryableEntry = new QueryEntry(ss, dataKey, dataKey, record.getValue(), mapContainer.getExtractors());
             indexes.saveEntryIndex(queryableEntry, oldValue);
         }
     }

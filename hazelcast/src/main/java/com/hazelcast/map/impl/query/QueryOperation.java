@@ -18,14 +18,15 @@ package com.hazelcast.map.impl.query;
 
 import com.hazelcast.core.MemberLeftException;
 import com.hazelcast.instance.GroupProperties;
-import com.hazelcast.map.impl.operation.AbstractMapOperation;
 import com.hazelcast.map.impl.MapServiceContext;
+import com.hazelcast.map.impl.operation.AbstractMapOperation;
 import com.hazelcast.monitor.impl.LocalMapStatsImpl;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.partition.InternalPartitionService;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.Predicate;
+import com.hazelcast.query.impl.Extractors;
 import com.hazelcast.query.impl.Indexes;
 import com.hazelcast.query.impl.QueryableEntry;
 import com.hazelcast.spi.ExceptionAction;
@@ -100,7 +101,7 @@ public class QueryOperation extends AbstractMapOperation implements ReadonlyOper
         if (entries != null) {
             result.addAll(entries);
         } else {
-            fullTableScan(initialPartitions, nodeEngine.getGroupProperties());
+            fullTableScan(initialPartitions, nodeEngine.getGroupProperties(), mapContainer.getExtractors());
         }
 
         if (checkPartitionState(partitionService, initialPartitionStateVersion)) {
@@ -116,7 +117,7 @@ public class QueryOperation extends AbstractMapOperation implements ReadonlyOper
         }
     }
 
-    private void fullTableScan(Collection<Integer> initialPartitions, GroupProperties groupProperties)
+    private void fullTableScan(Collection<Integer> initialPartitions, GroupProperties groupProperties, Extractors extractors)
             throws InterruptedException, ExecutionException {
         if (pagingPredicate != null) {
             runParallelForPaging(initialPartitions);

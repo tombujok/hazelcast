@@ -1,5 +1,6 @@
 package com.hazelcast.query.impl.getters;
 
+import com.hazelcast.query.extractor.MultiResult;
 import com.hazelcast.util.ExceptionUtil;
 
 import java.lang.reflect.Field;
@@ -15,12 +16,12 @@ public class GetterFactory {
                 return NullGetter.NULL_GETTER;
             }
 
-            if (currentObject instanceof MultiResultCollector) {
-                MultiResultCollector multiResultCollector = (MultiResultCollector) currentObject;
-                if (multiResultCollector.isEmpty()) {
+            if (currentObject instanceof MultiResult) {
+                MultiResult MultiResult = (MultiResult) currentObject;
+                if (MultiResult.isEmpty()) {
                     return NullGetter.NULL_GETTER;
                 }
-                currentObject = multiResultCollector.getResults().iterator().next();
+                currentObject = MultiResult.getResults().iterator().next();
                 if (currentObject == null) {
                     return NullGetter.NULL_GETTER;
                 }

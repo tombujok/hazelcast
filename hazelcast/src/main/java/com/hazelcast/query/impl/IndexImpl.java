@@ -23,6 +23,7 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.query.QueryException;
+import com.hazelcast.query.extractor.ExtractionEngine;
 import com.hazelcast.query.impl.TypeConverters.TypeConverter;
 
 import java.io.IOException;
@@ -48,11 +49,13 @@ public class IndexImpl implements Index {
     private volatile TypeConverter converter;
 
     private SerializationService ss;
+    private Extractors extractors;
 
-    public IndexImpl(String attribute, boolean ordered, SerializationService ss) {
+    public IndexImpl(String attribute, boolean ordered, SerializationService ss, Extractors extractors) {
         this.attribute = attribute;
         this.ordered = ordered;
         this.ss = ss;
+        this.extractors = extractors;
         indexStore = (ordered) ? new SortedIndexStore() : new UnsortedIndexStore();
     }
 
@@ -63,7 +66,7 @@ public class IndexImpl implements Index {
 
     @Override
     public void removeEntryIndex(Record record) {
-        Comparable value = (Comparable) QueryEntry.extractAttribute(attribute, record.getKey(), record.getValue(), ss);
+        Comparable value = (Comparable) ExtractionEngine.extractAttribute(extractors, attribute, record.getKey(), record.getValue(), ss);
 
         if (value.getClass().isEnum()) {
             value = TypeConverters.ENUM_CONVERTER.convert(value);
@@ -101,11 +104,11 @@ public class IndexImpl implements Index {
         }
 
         Object oldValue = null;
-        if(oldRecordValue != null) {
-            oldValue = QueryEntry.extractAttribute(attribute, e.getKey(), oldRecordValue, ss);
+        if (oldRecordValue != null) {
+            oldValue = ExtractionEngine.extractAttribute(extractors, attribute, e.getKey(), oldRecordValue, ss);
         }
 
-        Object newValue = QueryEntry.extractAttribute(attribute, e.getKey(), e.getValue(), ss);
+        Object newValue = ExtractionEngine.extractAttribute(extractors, attribute, e.getKey(), e.getValue(), ss);
         createOrUpdateIndexStore(newValue, oldValue, e);
     }
 

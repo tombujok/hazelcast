@@ -36,9 +36,11 @@ public class Indexes {
     private final AtomicReference<Index[]> indexes = new AtomicReference<Index[]>(EMPTY_INDEX);
     private volatile boolean hasIndex;
     private SerializationService ss;
+    private Extractors extractors;
 
-    public Indexes(SerializationService ss) {
+    public Indexes(SerializationService ss, Extractors extractors) {
         this.ss = ss;
+        this.extractors = extractors;
     }
 
     public synchronized Index destroyIndex(String attribute) {
@@ -50,7 +52,7 @@ public class Indexes {
         if (index != null) {
             return index;
         }
-        index = new IndexImpl(attribute, ordered, ss);
+        index = new IndexImpl(attribute, ordered, ss, extractors);
         mapIndexes.put(attribute, index);
         Object[] indexObjects = mapIndexes.values().toArray();
         Index[] newIndexes = new Index[indexObjects.length];

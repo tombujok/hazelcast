@@ -100,7 +100,7 @@ class MapMigrationAwareService implements MigrationAwareService {
                         Object value = record.getValue();
                         if (value != null) {
                             indexes.saveEntryIndex(new QueryEntry(serializationService, record.getKey(),
-                                    record.getKey(), value), null);
+                                    record.getKey(), value, mapContainer.getExtractors()), null);
                         }
                     }
                 }

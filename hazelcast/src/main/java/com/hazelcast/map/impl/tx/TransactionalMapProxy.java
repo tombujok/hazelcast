@@ -17,12 +17,13 @@
 package com.hazelcast.map.impl.tx;
 
 import com.hazelcast.core.TransactionalMap;
+import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.nio.serialization.Data;
-import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.Predicate;
+import com.hazelcast.query.impl.Extractors;
 import com.hazelcast.query.impl.QueryEntry;
 import com.hazelcast.spi.NodeEngine;
 import com.hazelcast.transaction.impl.Transaction;
@@ -326,6 +327,7 @@ public class TransactionalMapProxy extends TransactionalMapProxySupport implemen
         MapServiceContext mapServiceContext = service.getMapServiceContext();
         SerializationService ss = getNodeEngine().getSerializationService();
 
+        Extractors extractors = mapServiceContext.getMapContainer(name).getExtractors();
         QueryResultSet queryResultSet = (QueryResultSet) queryInternal(predicate, IterationType.KEY, false);
         // TODO: Can't we just use the original set?
         Set<Object> keySet = new HashSet<Object>(queryResultSet);
@@ -335,7 +337,7 @@ public class TransactionalMapProxy extends TransactionalMapProxySupport implemen
                 Object value = entry.getValue().value instanceof Data
                         ? mapServiceContext.toObject(entry.getValue().value) : entry.getValue().value;
 
-                QueryEntry queryEntry = new QueryEntry(ss, entry.getKey(), key, value);
+                QueryEntry queryEntry = new QueryEntry(ss, entry.getKey(), key, value, extractors);
                 // apply predicate on txMap
                 if (predicate.apply(queryEntry)) {
                     keySet.add(key);
@@ -390,6 +392,7 @@ public class TransactionalMapProxy extends TransactionalMapProxySupport implemen
 
         SerializationService serializationService = getNodeEngine().getSerializationService();
 
+        Extractors extractors = getService().getMapServiceContext().getMapContainer(name).getExtractors();
         QueryResultSet queryResultSet = (QueryResultSet) queryInternal(predicate, IterationType.ENTRY, false);
         // TODO: Can't we just use the original set?
         List<Object> valueSet = new ArrayList<Object>();
@@ -409,7 +412,7 @@ public class TransactionalMapProxy extends TransactionalMapProxySupport implemen
                 }
                 Object entryValue = entry.getValue().value;
 
-                QueryEntry queryEntry = new QueryEntry(serializationService, entry.getKey(), keyObject, entryValue);
+                QueryEntry queryEntry = new QueryEntry(serializationService, entry.getKey(), keyObject, entryValue, extractors);
                 if (predicate.apply(queryEntry)) {
                     valueSet.add(queryEntry.getValue());
                 }
