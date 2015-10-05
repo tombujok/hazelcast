@@ -1,9 +1,11 @@
 package com.hazelcast.query.extractor;
 
+import com.hazelcast.internal.serialization.PortableContext;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.Portable;
 import com.hazelcast.query.QueryException;
+import com.hazelcast.query.impl.AttributeType;
 import com.hazelcast.query.impl.Extractors;
 import com.hazelcast.query.impl.PortableExtractor;
 import com.hazelcast.query.impl.getters.ReflectionHelper;
@@ -41,10 +43,9 @@ public class ExtractionEngine {
         }
     }
 
-    public static boolean isKey(String attributeName) {
+    private static boolean isKey(String attributeName) {
         return attributeName.startsWith(KEY_ATTRIBUTE_NAME);
     }
-
 
     private static String getAttributeName(boolean isKey, String attributeName) {
         if (isKey) {
@@ -54,7 +55,7 @@ public class ExtractionEngine {
         }
     }
 
-    static Comparable extractViaPortable(String attributeName, Data data, SerializationService ss) {
+    private static Comparable extractViaPortable(String attributeName, Data data, SerializationService ss) {
         try {
             return PortableExtractor.extractValue(ss, data, attributeName);
         } catch (QueryException e) {
@@ -67,13 +68,41 @@ public class ExtractionEngine {
     // This method is very inefficient because:
     // lot of time is spend on retrieving field/method and it isn't cached
     // the actual invocation on the Field, Method is also is quite expensive.
-    public static Object extractViaReflection(String attributeName, Object obj) {
+    private static Object extractViaReflection(String attributeName, Object obj) {
         try {
             return ReflectionHelper.extractValue(obj, attributeName);
         } catch (QueryException e) {
             throw e;
         } catch (Exception e) {
             throw new QueryException(e);
+        }
+    }
+
+    public static AttributeType extractAttributeType(Extractors extractors, String attributeName, Object key, Object value, SerializationService ss) {
+        if (KEY_ATTRIBUTE_NAME.equals(attributeName)) {
+            return ReflectionHelper.getAttributeType(key.getClass());
+        } else if (THIS_ATTRIBUTE_NAME.equals(attributeName)) {
+            return ReflectionHelper.getAttributeType(value.getClass());
+        }
+
+        boolean isKey = ExtractionEngine.isKey(attributeName);
+        attributeName = getAttributeName(isKey, attributeName);
+
+        Object target = isKey ? key : value;
+
+        if (target instanceof Portable || target instanceof Data) {
+            Data data = ss.toData(target);
+            if (data.isPortable()) {
+                PortableContext portableContext = ss.getPortableContext();
+                return PortableExtractor.getAttributeType(portableContext, data, attributeName);
+            }
+        }
+
+        ValueExtractor extractor = extractors.getExtractor(attributeName);
+        if (extractor != null) {
+            return null; // TODO -> extraction of type via extractors
+        } else {
+            return ReflectionHelper.getAttributeType(isKey ? key : value, attributeName);
         }
     }
 
