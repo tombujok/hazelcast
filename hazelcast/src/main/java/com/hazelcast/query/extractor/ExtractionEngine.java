@@ -15,9 +15,9 @@ import static com.hazelcast.query.QueryConstants.THIS_ATTRIBUTE_NAME;
 public class ExtractionEngine {
 
     public static Object extractAttribute(Extractors extractors, String attributeName, Object key, Object value, SerializationService ss) {
-        if (KEY_ATTRIBUTE_NAME.equals(attributeName)) {
+        if (KEY_ATTRIBUTE_NAME.value().equals(attributeName)) {
             return ss.toObject(key);
-        } else if (THIS_ATTRIBUTE_NAME.equals(attributeName)) {
+        } else if (THIS_ATTRIBUTE_NAME.value().equals(attributeName)) {
             return ss.toObject(value);
         }
 
@@ -43,12 +43,12 @@ public class ExtractionEngine {
     }
 
     private static boolean isKey(String attributeName) {
-        return attributeName.startsWith(KEY_ATTRIBUTE_NAME);
+        return attributeName.startsWith(KEY_ATTRIBUTE_NAME.value());
     }
 
     private static String getAttributeName(boolean isKey, String attributeName) {
         if (isKey) {
-            return attributeName.substring(KEY_ATTRIBUTE_NAME.length() + 1);
+            return attributeName.substring(KEY_ATTRIBUTE_NAME.value().length() + 1);
         } else {
             return attributeName;
         }
@@ -78,9 +78,9 @@ public class ExtractionEngine {
     }
 
     public static AttributeType extractAttributeType(Extractors extractors, String attributeName, Object key, Object value, SerializationService ss) {
-        if (KEY_ATTRIBUTE_NAME.equals(attributeName)) {
+        if (KEY_ATTRIBUTE_NAME.value().equals(attributeName)) {
             return ReflectionHelper.getAttributeType(key.getClass());
-        } else if (THIS_ATTRIBUTE_NAME.equals(attributeName)) {
+        } else if (THIS_ATTRIBUTE_NAME.value().equals(attributeName)) {
             return ReflectionHelper.getAttributeType(value.getClass());
         }
 

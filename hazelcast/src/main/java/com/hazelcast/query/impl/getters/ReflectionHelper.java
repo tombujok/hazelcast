@@ -155,7 +155,7 @@ public final class ReflectionHelper {
                 final String camelName = Character.toUpperCase(nameWithoutSuffix.charAt(0)) + nameWithoutSuffix.substring(1);
                 possibleMethodNames.add("get" + camelName);
                 possibleMethodNames.add("is" + camelName);
-                if (nameWithoutSuffix.equals(THIS_ATTRIBUTE_NAME)) {
+                if (nameWithoutSuffix.equals(THIS_ATTRIBUTE_NAME.value())) {
                     localGetter = GetterFactory.newThisGetter(parent, obj);
                 } else {
 
