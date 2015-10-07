@@ -111,7 +111,7 @@ public class MapContainer {
         nearCacheSizeEstimator = createNearCacheSizeEstimator();
         mapStoreContext = createMapStoreContext(this);
         mapStoreContext.start();
-        extractors = new Extractors(mapConfig.getMapExtractorConfigs());
+        extractors = new Extractors(mapConfig.getMapAttributeConfigs());
         indexes = new Indexes(nodeEngine.getSerializationService(), extractors);
     }
 

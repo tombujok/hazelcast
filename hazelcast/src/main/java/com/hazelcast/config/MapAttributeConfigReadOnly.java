@@ -19,19 +19,19 @@ package com.hazelcast.config;
 /**
  * Contains the configuration for a extractor of Map.
  */
-public class MapExtractorConfigReadOnly extends MapExtractorConfig {
+public class MapAttributeConfigReadOnly extends MapAttributeConfig {
 
-    public MapExtractorConfigReadOnly(MapExtractorConfig config) {
+    public MapAttributeConfigReadOnly(MapAttributeConfig config) {
         super(config);
     }
 
     @Override
-    public MapExtractorConfig setAttribute(String attribute) {
+    public MapAttributeConfig setName(String attribute) {
         throw new UnsupportedOperationException("This config is read-only");
     }
 
     @Override
-    public MapExtractorConfig setType(String type) {
+    public MapAttributeConfig setExtractor(String type) {
         throw new UnsupportedOperationException("This config is read-only");
     }
 

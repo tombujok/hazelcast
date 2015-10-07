@@ -125,7 +125,7 @@ public class MapConfig {
 
     private List<MapIndexConfig> mapIndexConfigs;
 
-    private List<MapExtractorConfig> mapExtractorConfigs;
+    private List<MapAttributeConfig> mapAttributeConfigs;
 
     private List<QueryCacheConfig> queryCacheConfigs;
 
@@ -167,7 +167,7 @@ public class MapConfig {
         this.partitionLostListenerConfigs =
                 new ArrayList<MapPartitionLostListenerConfig>(config.getPartitionLostListenerConfigs());
         this.mapIndexConfigs = new ArrayList<MapIndexConfig>(config.getMapIndexConfigs());
-        this.mapExtractorConfigs = new ArrayList<MapExtractorConfig>(config.getMapExtractorConfigs());
+        this.mapAttributeConfigs = new ArrayList<MapAttributeConfig>(config.getMapAttributeConfigs());
         this.queryCacheConfigs = new ArrayList<QueryCacheConfig>(config.getQueryCacheConfigs());
         this.partitioningStrategyConfig = config.partitioningStrategyConfig != null
                 ? new PartitioningStrategyConfig(config.getPartitioningStrategyConfig()) : null;
@@ -586,20 +586,20 @@ public class MapConfig {
         return this;
     }
 
-    public MapConfig addMapExtractorConfig(MapExtractorConfig mapExtractorConfig) {
-        getMapExtractorConfigs().add(mapExtractorConfig);
+    public MapConfig addMapAttributeConfig(MapAttributeConfig mapAttributeConfig) {
+        getMapAttributeConfigs().add(mapAttributeConfig);
         return this;
     }
 
-    public List<MapExtractorConfig> getMapExtractorConfigs() {
-        if (mapExtractorConfigs == null) {
-            mapExtractorConfigs = new ArrayList<MapExtractorConfig>();
+    public List<MapAttributeConfig> getMapAttributeConfigs() {
+        if (mapAttributeConfigs == null) {
+            mapAttributeConfigs = new ArrayList<MapAttributeConfig>();
         }
-        return mapExtractorConfigs;
+        return mapAttributeConfigs;
     }
 
-    public MapConfig setMapExtractorConfigs(List<MapExtractorConfig> mapExtractorConfigs) {
-        this.mapExtractorConfigs = mapExtractorConfigs;
+    public MapConfig setMapAttributeConfigs(List<MapAttributeConfig> mapAttributeConfigs) {
+        this.mapAttributeConfigs = mapAttributeConfigs;
         return this;
     }
 
@@ -780,7 +780,7 @@ public class MapConfig {
         sb.append(", wanReplicationRef=").append(wanReplicationRef);
         sb.append(", entryListenerConfigs=").append(entryListenerConfigs);
         sb.append(", mapIndexConfigs=").append(mapIndexConfigs);
-        sb.append(", mapExtractorConfigs=").append(mapExtractorConfigs);
+        sb.append(", mapAttributeConfigs=").append(mapAttributeConfigs);
         sb.append(", quorumName=").append(quorumName);
         sb.append(", queryCacheConfigs=").append(queryCacheConfigs);
         sb.append('}');
