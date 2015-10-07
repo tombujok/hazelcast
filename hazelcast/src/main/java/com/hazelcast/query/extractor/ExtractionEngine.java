@@ -1,6 +1,5 @@
 package com.hazelcast.query.extractor;
 
-import com.hazelcast.internal.serialization.PortableContext;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.Portable;
@@ -85,26 +84,57 @@ public class ExtractionEngine {
             return ReflectionHelper.getAttributeType(value.getClass());
         }
 
-        boolean isKey = ExtractionEngine.isKey(attributeName);
-        attributeName = getAttributeName(isKey, attributeName);
+//        boolean isKey = ExtractionEngine.isKey(attributeName);
+//        attributeName = getAttributeName(isKey, attributeName);
+//
+//        Object target = isKey ? key : value;
+//
+//        if (target instanceof Portable || target instanceof Data) {
+//            Data data = ss.toData(target);
+//            if (data.isPortable()) {
+//                PortableContext portableContext = ss.getPortableContext();
+//                return PortableExtractor.getAttributeType(portableContext, data, attributeName);
+//            }
+//        }
+//
+//        ValueExtractor extractor = extractors.getExtractor(attributeName);
+//        if (extractor != null) {
+//            Object targetObject = ss.toObject(target);
+//            Object extractedObject = extractor.extract(targetObject);
+//            return getExtractedAttributeType(extractedObject);
+//        } else {
+//            return ReflectionHelper.getAttributeType(isKey ? key : value, attributeName);
+//        }
 
-        Object target = isKey ? key : value;
+        // TODO Can we do it like this for single-value attributes?
+        // ReflectionHelper can return a MultiResult now, right?
+        // If so we need to do the extraction to check the type of the objects from MultiResult.
+        Object extractedObject = extractAttribute(extractors, attributeName, key, value, ss);
+        return getExtractedAttributeType(extractedObject);
+    }
 
-        if (target instanceof Portable || target instanceof Data) {
-            Data data = ss.toData(target);
-            if (data.isPortable()) {
-                PortableContext portableContext = ss.getPortableContext();
-                return PortableExtractor.getAttributeType(portableContext, data, attributeName);
-            }
-        }
-
-        ValueExtractor extractor = extractors.getExtractor(attributeName);
-        if (extractor != null) {
-            return null; // TODO -> extraction of type via extractors
+    private static AttributeType getExtractedAttributeType(Object extractedObject) {
+        if (extractedObject instanceof MultiResult) {
+            return getExtractedAttributeTypeFromMultiResult((MultiResult) extractedObject);
         } else {
-            return ReflectionHelper.getAttributeType(isKey ? key : value, attributeName);
+            return getExtractedAttributeTypeFromSingleResult(extractedObject);
         }
     }
 
+    private static AttributeType getExtractedAttributeTypeFromSingleResult(Object extractedObject) {
+        if (extractedObject == null) {
+            return null;
+        } else {
+            return ReflectionHelper.getAttributeType(extractedObject.getClass());
+        }
+    }
+
+    private static AttributeType getExtractedAttributeTypeFromMultiResult(MultiResult extractedMultiResult) {
+        if (extractedMultiResult.isEmpty()) {
+            return null;
+        } else {
+            return ReflectionHelper.getAttributeType(extractedMultiResult.getResults().get(0).getClass());
+        }
+    }
 
 }
