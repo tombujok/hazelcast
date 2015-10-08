@@ -39,7 +39,7 @@ public final class ContainsPredicate extends AbstractPredicate implements Predic
     @Override
     public Set<QueryableEntry> filter(QueryContext queryContext) {
         /**
-         * @see ContainsAllPredicate.filter(QueryContext queryContext)
+         * @see ContainsAllPredicate#filter(QueryContext)
          */
         return null;
     }
