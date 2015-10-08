@@ -26,6 +26,7 @@ import com.hazelcast.query.impl.QueryContext;
 import com.hazelcast.query.impl.QueryableEntry;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +52,7 @@ public class EqualPredicate extends AbstractPredicate implements NegatablePredic
     @Override
     public Set<QueryableEntry> filter(QueryContext queryContext) {
         Index index = getIndex(queryContext);
+        // TODO not really - if the extracted attribute is an array or a collection that has been flattened for the indexing purposes
         return index.getRecords(value);
     }
 
@@ -59,6 +61,8 @@ public class EqualPredicate extends AbstractPredicate implements NegatablePredic
         Object entryValue = readAttribute(mapEntry);
         if (entryValue instanceof MultiResult) {
             return applyForMultiResult(mapEntry, (MultiResult) entryValue);
+        } else if (entryValue instanceof Collection || entryValue instanceof Object[]) {
+            throw new IllegalArgumentException("Cannot use equal predicate with an attribute that's an array or a collection");
         }
         return applyForSingleValue(mapEntry, (Comparable) entryValue);
     }
@@ -67,8 +71,9 @@ public class EqualPredicate extends AbstractPredicate implements NegatablePredic
         List<Object> results = result.getResults();
         for (Object o : results) {
             Comparable entryValue = (Comparable) convertAttribute(o);
-            boolean applied = applyForSingleValue(mapEntry, entryValue);
-            if (applied) {
+            // it's enough if there's only one result in the MultiResult that satisfies the predicate
+            boolean satisfied = applyForSingleValue(mapEntry, entryValue);
+            if (satisfied) {
                 return true;
             }
         }

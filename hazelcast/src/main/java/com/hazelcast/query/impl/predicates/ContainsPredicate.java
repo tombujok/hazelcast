@@ -10,7 +10,6 @@ import com.hazelcast.query.impl.QueryableEntry;
 import com.hazelcast.util.collection.ArrayUtils;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +23,7 @@ public final class ContainsPredicate extends AbstractPredicate implements Predic
         this.value = value;
     }
 
+    @Override
     public boolean apply(Map.Entry mapEntry) {
         Object o = readAttribute(mapEntry);
         if (o == null) {
