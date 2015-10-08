@@ -4,7 +4,6 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.query.IndexAwarePredicate;
 import com.hazelcast.query.Predicate;
-import com.hazelcast.query.impl.Index;
 import com.hazelcast.query.impl.QueryContext;
 import com.hazelcast.query.impl.QueryableEntry;
 import com.hazelcast.util.collection.ArrayUtils;
@@ -30,7 +29,7 @@ public final class ContainsPredicate extends AbstractPredicate implements Predic
             return false;
         }
         if (o instanceof Object[]) {
-            return ArrayUtils.contains((Object[])o, value);
+            return ArrayUtils.contains((Object[]) o, value);
         } else if (o instanceof Collection) {
             return ((Collection) o).contains(value);
         }
@@ -39,8 +38,10 @@ public final class ContainsPredicate extends AbstractPredicate implements Predic
 
     @Override
     public Set<QueryableEntry> filter(QueryContext queryContext) {
-        Index index = getIndex(queryContext);
-        return index.getRecords(value);
+        /**
+         * @see ContainsAllPredicate.filter(QueryContext queryContext)
+         */
+        return null;
     }
 
     @Override

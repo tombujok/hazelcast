@@ -71,7 +71,7 @@ public final class ContainsAllPredicate extends AbstractPredicate implements Pre
          * to leverage it.
          *
          * Current state of the art: ContainsAll does not use indexes. If the underlying collection is a Set with a
-         * O(1) lookup time the complexity will be as if an index was used.
+         * O(1) lookup time the complexity of apply() method will be as if an index has been used.
          */
         return null;
     }
