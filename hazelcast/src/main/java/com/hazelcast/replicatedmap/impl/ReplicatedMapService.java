@@ -112,7 +112,7 @@ public class ReplicatedMapService implements ManagedService, RemoteService, Even
         this.eventPublishingService = new ReplicatedMapEventPublishingService(this);
         this.mergePolicyProvider = new MergePolicyProvider(nodeEngine);
         this.replicatedMapSplitBrainHandlerService = new ReplicatedMapSplitBrainHandlerService(this,
-                mergePolicyProvider, partitionContainers);
+                mergePolicyProvider);
     }
 
     @Override
@@ -140,6 +140,9 @@ public class ReplicatedMapService implements ManagedService, RemoteService, Even
                         continue;
                     }
                     PartitionContainer partitionContainer = partitionContainers[i];
+                    if (partitionContainer.isEmpty()) {
+                        continue;
+                    }
                     for (Address address : addresses) {
                         CheckReplicaVersion checkReplicaVersion = new CheckReplicaVersion(partitionContainer);
                         checkReplicaVersion.setPartitionId(i);
