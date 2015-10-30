@@ -1,4 +1,4 @@
-package com.hazelcast.query.impl.extraction.predicate;
+package com.hazelcast.query.impl.extraction.predicates;
 
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.query.Predicates;
@@ -19,9 +19,9 @@ import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecificatio
 import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Index.UNORDERED;
 import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Multivalue.ARRAY;
 import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Multivalue.LIST;
-import static com.hazelcast.query.impl.extraction.predicate.CollectionDataStructure.Person;
-import static com.hazelcast.query.impl.extraction.predicate.CollectionDataStructure.limb;
-import static com.hazelcast.query.impl.extraction.predicate.CollectionDataStructure.person;
+import static com.hazelcast.query.impl.extraction.predicates.CollectionDataStructure.Person;
+import static com.hazelcast.query.impl.extraction.predicates.CollectionDataStructure.limb;
+import static com.hazelcast.query.impl.extraction.predicates.CollectionDataStructure.person;
 import static java.util.Arrays.asList;
 
 /**

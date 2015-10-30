@@ -1,4 +1,4 @@
-package com.hazelcast.query.impl.extraction.predicate;
+package com.hazelcast.query.impl.extraction.predicates;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.InMemoryFormat;
@@ -9,7 +9,7 @@ import com.hazelcast.query.impl.extraction.AbstractExtractionTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static com.hazelcast.query.impl.extraction.predicate.SingleValueDataStructure.Person;
+import static com.hazelcast.query.impl.extraction.predicates.SingleValueDataStructure.Person;
 
 /**
  * Tests whether all predicates work with the extraction in attributes that are not collections.

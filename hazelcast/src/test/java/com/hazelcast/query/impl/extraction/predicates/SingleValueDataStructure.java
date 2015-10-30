@@ -1,4 +1,4 @@
-package com.hazelcast.query.impl.extraction.predicate;
+package com.hazelcast.query.impl.extraction.predicates;
 
 import com.hazelcast.test.ObjectTestUtils;
 

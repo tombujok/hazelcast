@@ -1,4 +1,4 @@
-package com.hazelcast.query.impl.extraction.predicate;
+package com.hazelcast.query.impl.extraction.predicates;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.InMemoryFormat;
@@ -8,8 +8,8 @@ import com.hazelcast.query.extractor.MultiResult;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.impl.extraction.AbstractExtractionTest;
 
-import static com.hazelcast.query.impl.extraction.predicate.CollectionDataStructure.Limb;
-import static com.hazelcast.query.impl.extraction.predicate.CollectionDataStructure.Person;
+import static com.hazelcast.query.impl.extraction.predicates.CollectionDataStructure.Limb;
+import static com.hazelcast.query.impl.extraction.predicates.CollectionDataStructure.Person;
 
 /**
  * Tests whether all predicates work with the extraction in collections.
