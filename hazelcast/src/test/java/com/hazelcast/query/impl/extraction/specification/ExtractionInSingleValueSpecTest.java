@@ -17,10 +17,10 @@ import java.util.Collection;
 
 import static com.hazelcast.config.InMemoryFormat.BINARY;
 import static com.hazelcast.config.InMemoryFormat.OBJECT;
-import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.NO_INDEX;
-import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.ORDERED;
-import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.UNORDERED;
-import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Multivalue.SINGLE_VALUE;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Index.NO_INDEX;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Index.ORDERED;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Index.UNORDERED;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Multivalue.SINGLE_VALUE;
 import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.Finger;
 import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.Person;
 import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.finger;
@@ -33,7 +33,7 @@ import static java.util.Arrays.asList;
  * Specification test that verifies the behavior of corner-cases extraction in single-value attributes.
  * <p/>
  * Extraction mechanism: IN-BUILT REFLECTION EXTRACTION
- * <p>
+ * <p/>
  * This test is parametrised on two axes (see the parametrisationData() method):
  * - in memory format
  * - indexing

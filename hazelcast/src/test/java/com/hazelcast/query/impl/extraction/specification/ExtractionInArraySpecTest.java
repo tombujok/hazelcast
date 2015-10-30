@@ -16,10 +16,10 @@ import java.util.Collection;
 
 import static com.hazelcast.config.InMemoryFormat.BINARY;
 import static com.hazelcast.config.InMemoryFormat.OBJECT;
-import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.NO_INDEX;
-import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.ORDERED;
-import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.UNORDERED;
-import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Multivalue.ARRAY;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Index.NO_INDEX;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Index.ORDERED;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Index.UNORDERED;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionSpecification.Multivalue.ARRAY;
 import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.Finger;
 import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.Person;
 import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.finger;

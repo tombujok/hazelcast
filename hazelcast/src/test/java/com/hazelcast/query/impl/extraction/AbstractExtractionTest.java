@@ -7,54 +7,66 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MapIndexConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.query.Predicate;
-import com.hazelcast.query.impl.extraction.specification.ComplexDataStructure;
-import com.hazelcast.query.impl.predicates.AbstractPredicate;
-import com.hazelcast.query.impl.predicates.PredicateTestUtils;
-import com.hazelcast.test.HazelcastTestSupport;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
-public abstract class AbstractExtractionTest extends HazelcastTestSupport {
+/**
+ * Setups HZ instance and map for extraction testing.
+ * Enables configuring the HZ Instance through the getInstanceConfigurator() method that the sub-classes may override.
+ */
+public abstract class AbstractExtractionTest extends AbstractExtractionSpecification {
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    public enum Index {
-        NO_INDEX, UNORDERED, ORDERED
-    }
-
-    public enum Multivalue {
-        SINGLE_VALUE,
-        ARRAY,
-        LIST
-    }
-
+    // instance and map used in the tests
     private HazelcastInstance instance;
     protected IMap map;
 
+    // three parametrisation axes
     private InMemoryFormat inMemoryFormat;
     private Index index;
     protected Multivalue mv;
 
+    // constructor required by JUnit for parametrisation purposes
     public AbstractExtractionTest(InMemoryFormat inMemoryFormat, Index index, Multivalue multivalue) {
         this.inMemoryFormat = inMemoryFormat;
         this.index = index;
         this.mv = multivalue;
     }
 
+    /**
+     * Instance configurator enables tweaking the Instance config before the instance starts
+     */
     public abstract static class Configurator {
         public abstract void doWithConfig(Config config, Multivalue mv);
     }
 
+    /**
+     * Method may be overriden in sub-classes to tweak the HZ instance for purposes of each test.
+     */
+    protected Configurator getInstanceConfigurator() {
+        return null;
+    }
+
+    /**
+     * Sets up the HZ configuration for the given query specification
+     */
+    private void setup(Query query) {
+        Config config = setupMap(getInstanceConfigurator());
+        setupIndexes(config, query);
+        setupInstance(config);
+    }
+
+    /**
+     * Configures the map according to the test parameters and executes the custom configurator
+     */
     public Config setupMap(Configurator configurator) {
         MapConfig mapConfig = new MapConfig();
         mapConfig.setName("map");
@@ -70,6 +82,9 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
         return config;
     }
 
+    /**
+     * Configures the HZ indexing according to the test parameters
+     */
     private void setupIndexes(Config config, Query query) {
         if (index != Index.NO_INDEX) {
             MapIndexConfig mapIndexConfig = new MapIndexConfig();
@@ -79,29 +94,20 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
         }
     }
 
+    /**
+     * Initializes the instance and the map used in the tests
+     */
     private void setupInstance(Config config) {
         instance = createHazelcastInstance(config);
         map = instance.getMap("map");
     }
 
-    protected static Collection<Object[]> axes(List<InMemoryFormat> formats, List<Index> indexes,
-                                               List<Multivalue> multivalues) {
-        List<Object[]> combinations = new ArrayList<Object[]>();
-        for (InMemoryFormat inMemoryFormat : formats) {
-            for (Index index : indexes) {
-                for (Multivalue multivalue : multivalues) {
-                    combinations.add(new Object[]{inMemoryFormat, index, multivalue});
-                }
-            }
-        }
-        return combinations;
-    }
-
-    protected Configurator getInstanceConfigurator() {
-        return null;
-    }
-
-    // this way we avoid the name validation and can reuse the dot names
+    /**
+     * The trick here is that each extractor is registered under the attribute name like "brain.iq".
+     * It is illegal in the production usage, but it enables reusing the test cases from
+     * reflection-based tests without any code changes and to use them with extractors.
+     * In this way we avoid the name validation and can reuse the dot names
+     */
     public static class TestMapAttributeIndexConfig extends MapAttributeConfig {
         private String name;
 
@@ -115,56 +121,9 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
         }
     }
 
-    //
-    // TEST EXECUTION UTILITIES
-    //
-    protected static class Input {
-        Object[] objects;
-
-        public static Input of(Object... objects) {
-            Input input = new Input();
-            input.objects = objects;
-            return input;
-        }
-    }
-
-    protected static class Query {
-        AbstractPredicate predicate;
-        String expression;
-
-        public static Query of(Predicate predicate, Multivalue mv) {
-            AbstractPredicate ap = (AbstractPredicate) predicate;
-            Query query = new Query();
-            query.expression = parametrize(PredicateTestUtils.getAttributeName(ap), mv);
-            PredicateTestUtils.setAttributeName((AbstractPredicate) predicate, query.expression);
-            query.predicate = ap;
-            return query;
-        }
-    }
-
-    protected static class Expected {
-        Object[] objects;
-        Class<? extends Throwable> throwable;
-
-        public static Expected of(Object... objects) {
-            Expected expected = new Expected();
-            expected.objects = objects;
-            return expected;
-        }
-
-        public static Expected of(Class<? extends Throwable> throwable) {
-            Expected expected = new Expected();
-            expected.throwable = throwable;
-            return expected;
-        }
-
-        public static Expected empty() {
-            Expected expected = new Expected();
-            expected.objects = new ComplexDataStructure.Person[0];
-            return expected;
-        }
-    }
-
+    /**
+     * Populates the map with test data
+     */
     private void putTestDataToMap(Object... objects) {
         int i = 0;
         for (Object person : objects) {
@@ -172,11 +131,19 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
         }
     }
 
+    /**
+     * Enables executing specification tests that are 3 lines long, for example
+     * <code>
+     * execute(
+     * Input.of(BOND, KRUEGER),
+     * Query.of(Predicates.equal("limbs_[1].fingers_", "knife"), mv),
+     * Expected.of(IllegalArgumentException.class)
+     * );
+     * </code>
+     */
     protected void execute(Input input, Query query, Expected expected) {
         // GIVEN
-        Config config = setupMap(getInstanceConfigurator());
-        setupIndexes(config, query);
-        setupInstance(config);
+        setup(query);
 
         // EXPECT
         if (expected.throwable != null) {
@@ -197,11 +164,5 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
         }
     }
 
-    protected static String parametrize(String expression, AbstractExtractionTest.Multivalue mv) {
-        if (expression != null && !expression.contains("__")) {
-            return expression.replaceAll("_", "_" + mv.name().toLowerCase());
-        }
-        return expression;
-    }
 
 }
