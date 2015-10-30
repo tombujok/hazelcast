@@ -8,12 +8,12 @@ import com.hazelcast.config.MapIndexConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.Predicate;
+import com.hazelcast.query.impl.extraction.specification.ComplexDataStructure;
 import com.hazelcast.query.impl.predicates.AbstractPredicate;
 import com.hazelcast.query.impl.predicates.PredicateTestUtils;
 import com.hazelcast.test.HazelcastTestSupport;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,12 +28,12 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-
-    enum Index {
+    public enum Index {
         NO_INDEX, UNORDERED, ORDERED
     }
 
-    enum Multivalue {
+    public enum Multivalue {
+        SINGLE_VALUE,
         ARRAY,
         LIST
     }
@@ -53,10 +53,6 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
 
     public abstract static class Configurator {
         public abstract void doWithConfig(Config config, Multivalue mv);
-    }
-
-    public void setupMap() {
-        setupMap(null);
     }
 
     public Config setupMap(Configurator configurator) {
@@ -88,16 +84,12 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
         map = instance.getMap("map");
     }
 
-
-    @Parameterized.Parameters(name = "{index}: {0}, {1}, {2}")
-    public static Collection<Object[]> data() {
+    protected static Collection<Object[]> axes(List<InMemoryFormat> formats, List<Index> indexes,
+                                               List<Multivalue> multivalues) {
         List<Object[]> combinations = new ArrayList<Object[]>();
-        for (InMemoryFormat inMemoryFormat : InMemoryFormat.values()) {
-            if (inMemoryFormat.equals(InMemoryFormat.NATIVE)) {
-                continue; // available only in the enterprise version
-            }
-            for (Index index : Index.values()) {
-                for (Multivalue multivalue : Multivalue.values()) {
+        for (InMemoryFormat inMemoryFormat : formats) {
+            for (Index index : indexes) {
+                for (Multivalue multivalue : multivalues) {
                     combinations.add(new Object[]{inMemoryFormat, index, multivalue});
                 }
             }
@@ -126,21 +118,21 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
     //
     // TEST EXECUTION UTILITIES
     //
-    static class Input {
+    protected static class Input {
         Object[] objects;
 
-        static Input of(Object... objects) {
+        public static Input of(Object... objects) {
             Input input = new Input();
             input.objects = objects;
             return input;
         }
     }
 
-    static class Query {
+    protected static class Query {
         AbstractPredicate predicate;
         String expression;
 
-        static Query of(Predicate predicate, Multivalue mv) {
+        public static Query of(Predicate predicate, Multivalue mv) {
             AbstractPredicate ap = (AbstractPredicate) predicate;
             Query query = new Query();
             query.expression = parametrize(PredicateTestUtils.getAttributeName(ap), mv);
@@ -150,25 +142,25 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
         }
     }
 
-    static class Expected {
+    protected static class Expected {
         Object[] objects;
         Class<? extends Throwable> throwable;
 
-        static Expected of(Object... objects) {
+        public static Expected of(Object... objects) {
             Expected expected = new Expected();
             expected.objects = objects;
             return expected;
         }
 
-        static Expected of(Class<? extends Throwable> throwable) {
+        public static Expected of(Class<? extends Throwable> throwable) {
             Expected expected = new Expected();
             expected.throwable = throwable;
             return expected;
         }
 
-        static Expected empty() {
+        public static Expected empty() {
             Expected expected = new Expected();
-            expected.objects = new ComplexCaseDataStructure.Person[0];
+            expected.objects = new ComplexDataStructure.Person[0];
             return expected;
         }
     }
@@ -205,8 +197,8 @@ public abstract class AbstractExtractionTest extends HazelcastTestSupport {
         }
     }
 
-    static String parametrize(String expression, AbstractExtractionTest.Multivalue mv) {
-        if (!expression.contains("__")) {
+    protected static String parametrize(String expression, AbstractExtractionTest.Multivalue mv) {
+        if (expression != null && !expression.contains("__")) {
             return expression.replaceAll("_", "_" + mv.name().toLowerCase());
         }
         return expression;

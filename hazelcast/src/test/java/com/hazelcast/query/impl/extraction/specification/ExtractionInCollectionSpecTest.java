@@ -1,8 +1,9 @@
-package com.hazelcast.query.impl.extraction;
+package com.hazelcast.query.impl.extraction.specification;
 
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.query.QueryException;
+import com.hazelcast.query.impl.extraction.AbstractExtractionTest;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
 import org.junit.Ignore;
@@ -11,17 +12,36 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static com.hazelcast.query.impl.extraction.ComplexCaseDataStructure.Finger;
-import static com.hazelcast.query.impl.extraction.ComplexCaseDataStructure.Person;
-import static com.hazelcast.query.impl.extraction.ComplexCaseDataStructure.finger;
-import static com.hazelcast.query.impl.extraction.ComplexCaseDataStructure.limb;
-import static com.hazelcast.query.impl.extraction.ComplexCaseDataStructure.person;
-import static com.hazelcast.query.impl.extraction.ComplexCaseDataStructure.tattoos;
+import java.util.Collection;
 
+import static com.hazelcast.config.InMemoryFormat.BINARY;
+import static com.hazelcast.config.InMemoryFormat.OBJECT;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.NO_INDEX;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.ORDERED;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Index.UNORDERED;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Multivalue.ARRAY;
+import static com.hazelcast.query.impl.extraction.AbstractExtractionTest.Multivalue.LIST;
+import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.Finger;
+import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.Person;
+import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.finger;
+import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.limb;
+import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.person;
+import static com.hazelcast.query.impl.extraction.specification.ComplexDataStructure.tattoos;
+import static java.util.Arrays.asList;
 
+/**
+ * Specification test that verifies the behavior of corner-cases extraction in arrays and collections.
+ * <p/>
+ * Extraction mechanism: IN-BUILT REFLECTION EXTRACTION
+ * <p>
+ * This test is parametrised on two axes (see the parametrisationData() method):
+ * - in memory format
+ * - indexing
+ * - extraction in collections and arrays
+ */
 @RunWith(Parameterized.class)
 @Category({QuickTest.class, ParallelTest.class})
-public class ComplexCaseReflectionExtractionTest extends AbstractExtractionTest {
+public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
 
     private static final Person BOND = person("Bond",
             limb("left-hand", tattoos(), finger("thumb"), finger(null)),
@@ -37,7 +57,7 @@ public class ComplexCaseReflectionExtractionTest extends AbstractExtractionTest 
             limb("left", null, new Finger[]{})
     );
 
-    public ComplexCaseReflectionExtractionTest(InMemoryFormat inMemoryFormat, Index index, Multivalue multivalue) {
+    public ExtractionInCollectionSpecTest(InMemoryFormat inMemoryFormat, Index index, Multivalue multivalue) {
         super(inMemoryFormat, index, multivalue);
     }
 
@@ -77,12 +97,10 @@ public class ComplexCaseReflectionExtractionTest extends AbstractExtractionTest 
     }
 
     @Test
-    @Ignore
-    // TODO Inconsistent with and without Index
     public void indexOutOfBound_notExistingProperty() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[100].sdafasdf", "knife"), mv),
-                Expected.of(IllegalArgumentException.class));
+                Expected.of(QueryException.class));
     }
 
     @Test
@@ -163,7 +181,7 @@ public class ComplexCaseReflectionExtractionTest extends AbstractExtractionTest 
     @Ignore
     // TODO @Jaromir BUG to fix -> Collection throws NullPointer, Array throws QueryException
     // TODO Should be QueryException for consistency with null_arrayOrCollection_size
-    public void null_arrayOrCollection() {
+    public void null_fingersArrayOrCollection() {
         execute(Input.of(HUNT),
                 Query.of(Predicates.equal("limbs_[0].fingers_[0].name", "index"), mv),
                 Expected.of(NullPointerException.class));
@@ -172,42 +190,19 @@ public class ComplexCaseReflectionExtractionTest extends AbstractExtractionTest 
     @Test
     @Ignore
     // TODO @Jaromir BUG to fix -> see null_arrayOrCollection() test
-    public void null_arrayOrCollection_reduced() {
+    public void null_fingersArrayOrCollection_reduced() {
         execute(Input.of(HUNT),
                 Query.of(Predicates.equal("limbs_[0].fingers_[any].name", "index"), mv),
                 Expected.of(NullPointerException.class));
     }
 
-    @Test
-    @Ignore // TODO @Tom: move to list-only specific tests
-    public void null_arrayOrCollection_size() {
-        execute(Input.of(HUNT),
-                Query.of(Predicates.equal("limbs_[0].fingers_.size", 1), mv),
-                Expected.of(QueryException.class));
-    }
-
-    @Test
-    @Ignore // TODO @Tom: move to list-only specific tests
-    public void null_arrayOrCollection_size_reduced() {
-        execute(Input.of(HUNT),
-                Query.of(Predicates.equal("limbs_[any].fingers_.size", 1), mv),
-                Expected.of(QueryException.class));
-    }
-
-    @Test
-    @Ignore // TODO @Tom: move to list-only specific tests
-    public void sizeProperty() {
-        execute(Input.of(BOND, KRUEGER),
-                Query.of(Predicates.equal("limbs_[0].tattoos_.size", 1), mv),
-                Expected.of(KRUEGER));
-    }
-
-    @Test
-    @Ignore // TODO @Tom: move to list-only specific tests
-    public void lengthProperty() {
-        execute(Input.of(BOND, KRUEGER),
-                Query.of(Predicates.equal("limbs_[0].tattoos_.length", 1), mv),
-                Expected.of(KRUEGER));
+    @Parameterized.Parameters(name = "{index}: {0}, {1}, {2}")
+    public static Collection<Object[]> parametrisationData() {
+        return axes(
+                asList(BINARY, OBJECT),
+                asList(NO_INDEX, UNORDERED, ORDERED),
+                asList(ARRAY, LIST)
+        );
     }
 
 }
