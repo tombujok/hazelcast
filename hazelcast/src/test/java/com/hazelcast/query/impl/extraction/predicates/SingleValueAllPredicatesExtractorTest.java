@@ -4,6 +4,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.config.MapAttributeConfig;
 import com.hazelcast.config.MapConfig;
+import com.hazelcast.query.extractor.ValueCollector;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.impl.extraction.AbstractExtractionTest;
 import org.junit.runner.RunWith;
@@ -39,28 +40,28 @@ public class SingleValueAllPredicatesExtractorTest extends SingleValueAllPredica
 
                 MapAttributeConfig iqConfig = new AbstractExtractionTest.TestMapAttributeIndexConfig();
                 iqConfig.setName("brain.iq");
-                iqConfig.setExtractor("com.hazelcast.query.impl.extraction.predicate.SingleValueAllPredicatesExtractorTest$IqExtractor");
+                iqConfig.setExtractor("com.hazelcast.query.impl.extraction.predicates.SingleValueAllPredicatesExtractorTest$IqExtractor");
                 mapConfig.addMapAttributeConfig(iqConfig);
 
                 MapAttributeConfig nameConfig = new AbstractExtractionTest.TestMapAttributeIndexConfig();
                 nameConfig.setName("brain.name");
-                nameConfig.setExtractor("com.hazelcast.query.impl.extraction.predicate.SingleValueAllPredicatesExtractorTest$NameExtractor");
+                nameConfig.setExtractor("com.hazelcast.query.impl.extraction.predicates.SingleValueAllPredicatesExtractorTest$NameExtractor");
                 mapConfig.addMapAttributeConfig(nameConfig);
             }
         };
     }
 
-    public static class IqExtractor extends ValueExtractor {
+    public static class IqExtractor extends ValueExtractor<Person> {
         @Override
-        public Object extract(Object target) {
-            return ((Person) target).brain.iq;
+        public void extract(Person target, ValueCollector collector) {
+            collector.collect(target.brain.iq);
         }
     }
 
-    public static class NameExtractor extends ValueExtractor {
+    public static class NameExtractor extends ValueExtractor<Person> {
         @Override
-        public Object extract(Object target) {
-            return ((Person) target).brain.name;
+        public void extract(Person target, ValueCollector collector) {
+            collector.collect(target.brain.name);
         }
     }
 
