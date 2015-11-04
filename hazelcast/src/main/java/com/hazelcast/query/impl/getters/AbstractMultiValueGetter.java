@@ -102,14 +102,16 @@ public abstract class AbstractMultiValueGetter extends Getter {
 
     private void collectResult(MultiResult collector, Object parentObject) throws IllegalAccessException,
             InvocationTargetException {
-        Object currentObject = extractFrom(parentObject);
-        if (currentObject == null) {
-            return;
-        }
-        if (shouldReduce()) {
-            reduceInto(collector, currentObject);
+        // re-add nulls from parent extraction without extracting further down the path
+        if (parentObject == null) {
+            collector.add(parentObject);
         } else {
-            collector.add(currentObject);
+            Object currentObject = extractFrom(parentObject);
+            if (shouldReduce()) {
+                reduceInto(collector, currentObject);
+            } else {
+                collector.add(currentObject);
+            }
         }
     }
 
@@ -178,6 +180,7 @@ public abstract class AbstractMultiValueGetter extends Getter {
         } else if (currentObject instanceof Object[]) {
             reduceArrayInto(collector, (Object[]) currentObject);
         } else if (currentObject == null) {
+            // collect null since it's a valid result
             collector.add(null);
         } else {
             throw new IllegalArgumentException("Can't reduce result from a type " + currentObject.getClass()

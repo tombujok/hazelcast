@@ -6,7 +6,6 @@ import com.hazelcast.query.QueryException;
 import com.hazelcast.query.impl.extraction.AbstractExtractionTest;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -169,7 +168,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_reduced_comparedToNull() {
         execute(Input.of(HUNT_NULL_LIMB),
                 Query.of(Predicates.equal("limbs_[any].tattoos_[1]", null), mv),
@@ -247,8 +245,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("bug")
-    // TODO BUG to fix -> null values handling in MultiResult like in IndexStore
     public void comparable_primitive_comparedToNull_reduced_matching() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[0].fingers_[any].name", null), mv),
@@ -256,8 +252,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("bug")
-    // TODO BUG to fix -> null values handling in MultiResult like in IndexStore
     public void comparable_primitive_reduced_atLeaf_comparedToNull_matching() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[any].fingers_[1].name", null), mv),

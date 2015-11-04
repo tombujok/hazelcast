@@ -45,6 +45,12 @@ public final class GetterFactory {
             if (returnType == null) {
                 return NullGetter.NULL_GETTER;
             }
+        } else if (isExtractingFromArray(fieldType, modifierSuffix)) {
+            validateModifier(modifierSuffix);
+            Object currentObject = getCurrentObject(object, parentGetter);
+            if (currentObject == null) {
+                return NullGetter.NULL_GETTER;
+            }
         }
         return new FieldGetter(parentGetter, field, modifierSuffix, returnType);
     }
@@ -62,6 +68,12 @@ public final class GetterFactory {
             Collection collection = (Collection) method.invoke(currentObject);
             returnType = getCollectionType(collection);
             if (returnType == null) {
+                return NullGetter.NULL_GETTER;
+            }
+        } else if (isExtractingFromArray(methodReturnType, modifierSuffix)) {
+            validateModifier(modifierSuffix);
+            Object currentObject = getCurrentObject(object, parentGetter);
+            if (currentObject == null) {
                 return NullGetter.NULL_GETTER;
             }
         }
@@ -104,6 +116,10 @@ public final class GetterFactory {
 
     private static boolean isExtractingFromCollection(Class<?> type, String modifierSuffix) {
         return modifierSuffix != null && Collection.class.isAssignableFrom(type);
+    }
+
+    private static boolean isExtractingFromArray(Class<?> type, String modifierSuffix) {
+        return modifierSuffix != null && type.isArray();
     }
 
     private static Object getCurrentObject(Object obj, Getter parent) throws Exception {

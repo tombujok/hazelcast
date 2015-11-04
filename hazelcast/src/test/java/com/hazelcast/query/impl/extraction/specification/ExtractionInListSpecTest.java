@@ -5,7 +5,6 @@ import com.hazelcast.query.Predicates;
 import com.hazelcast.query.impl.extraction.AbstractExtractionTest;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -124,7 +123,6 @@ public class ExtractionInListSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-     @Ignore("bug")
     public void null_collection_size_atLeaf_reduced_compared_to_null() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[any].tattoos_.size", null), mv),
