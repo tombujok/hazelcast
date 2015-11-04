@@ -106,7 +106,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_negative() {
         execute(Input.of(HUNT_NULL_LIMB),
                 Query.of(Predicates.equal("limbs_[-1].tattoos_[1]", "knife"), mv),
@@ -135,7 +134,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_atLeaf_comparedToNull() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[100]", null), mv),
@@ -143,7 +141,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_atLeaf() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[100]", "knife"), mv),
@@ -151,7 +148,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_negative_atLeaf() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[-1]", "knife"), mv),
@@ -188,7 +184,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_reduced_atLeaf_comparedToNull() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[any]", null), mv),
@@ -196,7 +191,6 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_reduced_atLeaf() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[any]", "knife"), mv),

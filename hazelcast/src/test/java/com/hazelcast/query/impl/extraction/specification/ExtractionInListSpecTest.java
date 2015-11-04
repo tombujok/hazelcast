@@ -124,7 +124,7 @@ public class ExtractionInListSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("bug")
+     @Ignore("bug")
     public void null_collection_size_atLeaf_reduced_compared_to_null() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[any].tattoos_.size", null), mv),

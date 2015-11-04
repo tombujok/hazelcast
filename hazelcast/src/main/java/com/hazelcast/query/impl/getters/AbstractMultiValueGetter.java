@@ -35,7 +35,7 @@ public abstract class AbstractMultiValueGetter extends Getter {
     public AbstractMultiValueGetter(Getter parent, String modifierSuffix, Class<?> inputType, Class resultType) {
         super(parent);
         boolean isArray = inputType.isArray();
-        boolean isCollection  = Collection.class.isAssignableFrom(inputType);
+        boolean isCollection = Collection.class.isAssignableFrom(inputType);
         if (modifierSuffix == null) {
             modifier = DO_NOT_REDUCE;
         } else {
@@ -140,6 +140,8 @@ public abstract class AbstractMultiValueGetter extends Getter {
             return CollectionUtil.getItemAtPositionOrNull((Collection) object, position);
         } else if (object instanceof Object[]) {
             return ArrayUtils.getItemAtPositionOrNull((Object[]) object, position);
+        } else if (object == null) {
+            return null;
         }
         throw new IllegalArgumentException("Cannot extract an element from class of type" + object.getClass()
                 + " Collections and Arrays are supported only");
@@ -175,13 +177,15 @@ public abstract class AbstractMultiValueGetter extends Getter {
             reduceCollectionInto(collector, (Collection) currentObject);
         } else if (currentObject instanceof Object[]) {
             reduceArrayInto(collector, (Object[]) currentObject);
+        } else if (currentObject == null) {
+            collector.add(null);
         } else {
             throw new IllegalArgumentException("Can't reduce result from a type " + currentObject.getClass()
                     + " Only Collections and Arrays are supported.");
         }
     }
 
-    private int parseModifier(String modifier) {
+    private static int parseModifier(String modifier) {
         String stringValue = modifier.substring(1, modifier.length() - 1);
         if (REDUCER_ANY_TOKEN.equals(stringValue)) {
             return REDUCE_EVERYTHING;
@@ -192,6 +196,10 @@ public abstract class AbstractMultiValueGetter extends Getter {
             throw new IllegalArgumentException("Position argument cannot be negative. Passed argument: " + modifier);
         }
         return pos;
+    }
+
+    static void validateModifier(String modifier) {
+        parseModifier(modifier);
     }
 
 }
