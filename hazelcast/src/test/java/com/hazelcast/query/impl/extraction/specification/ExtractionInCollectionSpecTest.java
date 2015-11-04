@@ -71,19 +71,17 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("TEST_3")
     public void indexOutOfBound_comparedToNull() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[100].tattoos_[1]", null), mv),
-                Expected.of(QueryException.class));
+                Expected.of(BOND, KRUEGER));
     }
 
     @Test
-    @Ignore("TEST_4")
     public void indexOutOfBound() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[100].tattoos_[1]", "knife"), mv),
-                Expected.of(QueryException.class));
+                Expected.empty());
     }
 
     @Test
@@ -94,23 +92,21 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("TEST_5")
     public void indexOutOfBound_nullCollection_comparedToNull() {
-        execute(Input.of(HUNT_NULL_LIMB),
+        execute(Input.of(BOND, HUNT_NULL_LIMB),
                 Query.of(Predicates.equal("limbs_[100].tattoos_[1]", null), mv),
-                Expected.of(QueryException.class));
+                Expected.of(BOND, HUNT_NULL_LIMB));
     }
 
     @Test
-    @Ignore("TEST_5")
     public void indexOutOfBound_nullCollection() {
-        execute(Input.of(HUNT_NULL_LIMB),
+        execute(Input.of(BOND, HUNT_NULL_LIMB),
                 Query.of(Predicates.equal("limbs_[100].tattoos_[1]", "knife"), mv),
-                Expected.of(QueryException.class));
+                Expected.empty());
     }
 
     @Test
-    @Ignore("TEST_5")
+    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_negative() {
         execute(Input.of(HUNT_NULL_LIMB),
                 Query.of(Predicates.equal("limbs_[-1].tattoos_[1]", "knife"), mv),
@@ -118,19 +114,17 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("TEST_3")
     public void indexOutOfBound_atLeaf_comparedToNull() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[100]", null), mv),
-                Expected.of(QueryException.class));
+                Expected.of(BOND, KRUEGER));
     }
 
     @Test
-    @Ignore("TEST_4")
     public void indexOutOfBound_atLeaf() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[100]", "knife"), mv),
-                Expected.of(QueryException.class));
+                Expected.empty());
     }
 
     @Test
@@ -141,23 +135,23 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("TEST_5")
+    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_atLeaf_comparedToNull() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[100]", null), mv),
-                Expected.of(QueryException.class));
+                Expected.of(HUNT_NULL_TATTOOS));
     }
 
     @Test
-    @Ignore("TEST_5")
+    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_atLeaf() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[100]", "knife"), mv),
-                Expected.of(QueryException.class));
+                Expected.empty());
     }
 
     @Test
-    @Ignore("TEST_5")
+    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_negative_atLeaf() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[-1]", "knife"), mv),
@@ -179,35 +173,34 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore("TEST_6")
+    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_reduced_comparedToNull() {
         execute(Input.of(HUNT_NULL_LIMB),
                 Query.of(Predicates.equal("limbs_[any].tattoos_[1]", null), mv),
-                Expected.of(QueryException.class));
+                Expected.of(HUNT_NULL_LIMB));
     }
 
     @Test
-    @Ignore("TEST_6")
     public void indexOutOfBound_nullCollection_reduced() {
         execute(Input.of(HUNT_NULL_LIMB),
                 Query.of(Predicates.equal("limbs_[any].tattoos_[1]", "knife"), mv),
-                Expected.of(QueryException.class));
+                Expected.empty());
     }
 
     @Test
-    @Ignore("TEST_6")
+    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_reduced_atLeaf_comparedToNull() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[any]", null), mv),
-                Expected.of(QueryException.class));
+                Expected.of(HUNT_NULL_TATTOOS));
     }
 
     @Test
-    @Ignore("TEST_6")
+    @Ignore("inconsistency")
     public void indexOutOfBound_nullCollection_reduced_atLeaf() {
         execute(Input.of(HUNT_NULL_TATTOOS),
                 Query.of(Predicates.equal("limbs_[0].tattoos_[any]", "knife"), mv),
-                Expected.of(QueryException.class));
+                Expected.empty());
     }
 
     @Test
@@ -260,8 +253,8 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore
-    // TODO @Jaromir BUG to fix -> null values handling in MultiResult like in IndexStore
+    @Ignore("bug")
+    // TODO BUG to fix -> null values handling in MultiResult like in IndexStore
     public void comparable_primitive_comparedToNull_reduced_matching() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[0].fingers_[any].name", null), mv),
@@ -269,8 +262,8 @@ public class ExtractionInCollectionSpecTest extends AbstractExtractionTest {
     }
 
     @Test
-    @Ignore
-    // TODO @Jaromir BUG to fix -> null values handling in MultiResult like in IndexStore
+    @Ignore("bug")
+    // TODO BUG to fix -> null values handling in MultiResult like in IndexStore
     public void comparable_primitive_reduced_atLeaf_comparedToNull_matching() {
         execute(Input.of(BOND, KRUEGER),
                 Query.of(Predicates.equal("limbs_[any].fingers_[1].name", null), mv),
