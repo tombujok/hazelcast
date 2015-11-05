@@ -50,6 +50,19 @@ package com.hazelcast.query.extractor;
 public abstract class ValueExtractor<T> {
 
     /**
+     * Before the extract() method is used for the first time the extractor's init method is invoked, passing
+     * parameters that may be used in the extraction later on.
+     * It's up to the extractor's implementer to parse and use the arguments in the desired way.
+     * The parameters may be stored in <b>volatile</b> class attributes for an easy reuse.
+     * Each extractor instance may be used by multiple threads at a time, so make sure there's no mutable state.
+     * Each extractor instance may be used in multiple queries at a time, but they have to have the same init params.
+     *
+     * @param params parameters as a single string
+     */
+    public void init(String params) {
+    }
+
+    /**
      * Extracts a value from the given target object.
      * The method does not return any value, the extracted value is collected by the ValueCollector instead.<p/>
      * The extractor may extract:
