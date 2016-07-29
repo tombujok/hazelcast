@@ -16,6 +16,7 @@
 
 package com.hazelcast.client.proxy;
 
+import com.hazelcast.aggregation.EntryAggregator;
 import com.hazelcast.client.impl.ClientLockReferenceIdGenerator;
 import com.hazelcast.client.impl.ClientMessageDecoder;
 import com.hazelcast.client.impl.protocol.ClientMessage;
@@ -1070,6 +1071,12 @@ public class ClientMapProxy<K, V>
     }
 
     @Override
+    public <R> R values(EntryAggregator<R, K, V> aggregator) {
+        // TODO
+        return null;
+    }
+
+    @Override
     public Set<Entry<K, V>> entrySet() {
         ClientMessage request = MapEntrySetCodec.encodeRequest(name);
         ClientMessage response = invoke(request);
@@ -1173,6 +1180,12 @@ public class ClientMapProxy<K, V>
         MapValuesWithPredicateCodec.ResponseParameters resultParameters = MapValuesWithPredicateCodec.decodeResponse(response);
 
         return new UnmodifiableLazyList<V>(resultParameters.response, getSerializationService());
+    }
+
+    @Override
+    public <R> R values(Predicate predicate, EntryAggregator<R, K, V> aggregator) {
+        // TODO
+        return null;
     }
 
     private Collection<V> valuesForPagingPredicate(PagingPredicate pagingPredicate) {

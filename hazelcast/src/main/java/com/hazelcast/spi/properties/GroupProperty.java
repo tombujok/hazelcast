@@ -65,7 +65,7 @@ public final class GroupProperty {
      * If this is less than the number of partitions on a Member partition operations
      * will queue behind other operations of different partitions.
      * <p/>
-     * The default is -1, which means that the value is determined dynamically.
+     * The default is -1, which meanse that the value is determined dynamically.
      */
     public static final HazelcastProperty PARTITION_OPERATION_THREAD_COUNT
             = new HazelcastProperty("hazelcast.operation.thread.count", -1);

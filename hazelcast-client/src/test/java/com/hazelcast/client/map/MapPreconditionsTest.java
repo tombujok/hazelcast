@@ -541,7 +541,7 @@ public class MapPreconditionsTest {
 
     @Test(expected = NullPointerException.class)
     public void testValuesWithNullPredicate() throws Exception {
-        map.values(null);
+        map.values((Predicate)null);
     }
 
     @Test(expected = QueryResultSizeExceededException.class)

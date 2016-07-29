@@ -123,6 +123,7 @@ abstract class MapProxySupport extends AbstractDistributedObject<MapService> imp
     protected static final String NULL_KEY_IS_NOT_ALLOWED = "Null key is not allowed!";
     protected static final String NULL_VALUE_IS_NOT_ALLOWED = "Null value is not allowed!";
     protected static final String NULL_PREDICATE_IS_NOT_ALLOWED = "Predicate should not be null!";
+    protected static final String NULL_AGGREGATOR_IS_NOT_ALLOWED = "EntryAggregator should not be null!";
     protected static final String NULL_LISTENER_IS_NOT_ALLOWED = "Null listener is not allowed!";
 
     private static final int CHECK_IF_LOADED_TIMEOUT_SECONDS = 60;

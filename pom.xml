@@ -246,7 +246,7 @@
                     <parallel>methods</parallel -->
                     <!-- JaCoCo will use the argLine set here. Test profiles override it. -->
                     <argLine>
-                        -Xms128m -Xmx1G -XX:MaxPermSize=128M
+                        -Xms1g -Xmx5G -XX:MaxPermSize=256M
                         -Dhazelcast.phone.home.enabled=false
                         -Dhazelcast.mancenter.enabled=false
                         -Dhazelcast.logging.type=none
@@ -296,7 +296,7 @@
                                     <forkCount>1C</forkCount>
                                     <reuseForks>true</reuseForks>
                                     <argLine>
-                                        -Xms128m -Xmx1G -XX:MaxPermSize=128M
+                                        -Xms1g -Xmx5G -XX:MaxPermSize=256M
                                         -Dhazelcast.phone.home.enabled=false
                                         -Dhazelcast.mancenter.enabled=false
                                         -Dhazelcast.logging.type=none
@@ -330,7 +330,7 @@
                                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
 
                                     <argLine>
-                                        -Xms128m -Xmx1G -XX:MaxPermSize=128M
+                                        -Xms1g -Xmx5G -XX:MaxPermSize=256M
                                         -Dhazelcast.phone.home.enabled=false
                                         -Dhazelcast.mancenter.enabled=false
                                         -Dhazelcast.logging.type=none
@@ -365,7 +365,7 @@
                         <configuration combine.self="override">
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
                             <argLine>
-                                -Xms128m -Xmx1G -XX:MaxPermSize=128M
+                                -Xms1g -Xmx5G -XX:MaxPermSize=256M
                                 -Dhazelcast.phone.home.enabled=false
                                 -Dhazelcast.mancenter.enabled=false
                                 -Dhazelcast.test.use.network=false
@@ -418,7 +418,7 @@
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
                             <testFailureIgnore>true</testFailureIgnore>
                             <argLine>
-                                -Xms128m -Xmx1G -XX:MaxPermSize=128M
+                                -Xms1g -Xmx5G -XX:MaxPermSize=256M
                                 -Dhazelcast.phone.home.enabled=false
                                 -Dhazelcast.mancenter.enabled=false
                                 -Dhazelcast.logging.type=none
@@ -452,7 +452,7 @@
             <id>test-coverage</id>
             <properties>
                 <argLine>
-                    -Xms128m -Xmx1G -XX:MaxPermSize=128M
+                    -Xms1g -Xmx5G -XX:MaxPermSize=256M
                     -Dhazelcast.phone.home.enabled=false
                     -Dhazelcast.mancenter.enabled=false
                     -Dhazelcast.logging.type=none
@@ -574,7 +574,7 @@
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
                             <testFailureIgnore>true</testFailureIgnore>
                             <argLine>
-                                -Xms128m -Xmx1G -XX:MaxPermSize=128M
+                                -Xms1g -Xmx5G -XX:MaxPermSize=256M
                                 -Dhazelcast.phone.home.enabled=false
                                 -Dhazelcast.mancenter.enabled=false
                                 -Dhazelcast.logging.type=none
@@ -828,7 +828,7 @@
                             <parallel>none</parallel>
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
                             <argLine>
-                                -Xms128m -Xmx1G -XX:MaxPermSize=128M
+                                -Xms1g -Xmx5G -XX:MaxPermSize=256M
                                 -Dhazelcast.phone.home.enabled=false
                                 -Dhazelcast.mancenter.enabled=false
                                 -Dhazelcast.logging.type=none

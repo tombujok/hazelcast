@@ -16,6 +16,7 @@
 
 package com.hazelcast.map.impl.proxy;
 
+import com.hazelcast.aggregation.EntryAggregator;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.EntryView;
@@ -56,6 +57,7 @@ import com.hazelcast.util.CollectionUtil;
 import com.hazelcast.util.IterationType;
 import com.hazelcast.util.MapUtil;
 import com.hazelcast.util.executor.DelegatingFuture;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -654,6 +656,33 @@ public class MapProxyImpl<K, V> extends MapProxySupport implements IMap<K, V>, I
             return new QueryResultCollection<V>(
                     getNodeEngine().getSerializationService(), IterationType.VALUE, false, false, result);
         }
+    }
+
+    @Override
+    public <R> R values(EntryAggregator aggregator) {
+        checkNotNull(aggregator, NULL_AGGREGATOR_IS_NOT_ALLOWED);
+
+        MapQueryEngine queryEngine = getMapQueryEngine();
+
+        aggregator = serializationService.toObject(serializationService.toData(aggregator));
+
+        queryEngine.invokeAggregateAllPartitions(name, TruePredicate.INSTANCE, aggregator);
+        return (R)aggregator.aggregate();
+    }
+
+    @Override
+    public <R> R values(Predicate predicate, EntryAggregator aggregator) {
+        checkNotNull(predicate, NULL_PREDICATE_IS_NOT_ALLOWED);
+        checkNotNull(aggregator, NULL_AGGREGATOR_IS_NOT_ALLOWED);
+
+        aggregator = serializationService.toObject(serializationService.toData(aggregator));
+        MapQueryEngine queryEngine = getMapQueryEngine();
+        if (predicate instanceof PagingPredicate) {
+            throw new IllegalArgumentException("PagingPredicate now allowed with EntryAggregator");
+        }
+
+        queryEngine.invokeAggregateAllPartitions(name, TruePredicate.INSTANCE, aggregator);
+        return (R)aggregator.aggregate();
     }
 
     @Override

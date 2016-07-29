@@ -16,6 +16,7 @@
 
 package com.hazelcast.map.impl.query;
 
+import com.hazelcast.aggregation.EntryAggregator;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.util.IterationType;
@@ -45,6 +46,9 @@ public interface MapQueryEngine {
     QueryResult queryLocalPartitions(String mapName, Predicate predicate, IterationType iterationType)
             throws ExecutionException, InterruptedException;
 
+    AggregationResult aggregateLocalPartitions(String mapName, Predicate predicate, EntryAggregator aggregator)
+            throws ExecutionException, InterruptedException;
+
     /**
      * Executes a query on a specific local partition.
      * <p>
@@ -61,6 +65,8 @@ public interface MapQueryEngine {
      * @return result of query
      */
     QueryResult queryLocalPartition(String mapName, Predicate predicate, int partitionId, IterationType iterationType);
+
+    AggregationResult aggregateLocalPartition(String mapName, Predicate predicate, int partitionId, EntryAggregator aggregator);
 
     /**
      * Query all local partitions.
@@ -119,4 +125,6 @@ public interface MapQueryEngine {
      * @return {@link SortedQueryResultSet}
      */
     Set queryAllPartitionsWithPagingPredicate(String mapName, PagingPredicate pagingPredicate, IterationType iterationType);
+
+    void invokeAggregateAllPartitions(String mapName, Predicate predicate, EntryAggregator aggregator);
 }

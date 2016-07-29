@@ -16,6 +16,7 @@
 
 package com.hazelcast.core;
 
+import com.hazelcast.aggregation.EntryAggregator;
 import com.hazelcast.map.EntryProcessor;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.map.QueryResultSizeExceededException;
@@ -77,7 +78,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
 
     /**
      * {@inheritDoc}
-     *
+     * <p>
      * No atomicity guarantees are given. It could be that in case of failure some of the key/value-pairs get written, while
      * others are not.
      */
@@ -313,10 +314,10 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      * the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
      * defined in the <tt>key</tt>'s class.
      *
-     * @param   key the key of the map entry.
-     * @return  ICompletableFuture from which the value of the key can be retrieved.
-     * @throws  NullPointerException if the specified key is null.
-     * @see     ICompletableFuture
+     * @param key the key of the map entry.
+     * @return ICompletableFuture from which the value of the key can be retrieved.
+     * @throws NullPointerException if the specified key is null.
+     * @see ICompletableFuture
      */
     ICompletableFuture<V> getAsync(K key);
 
@@ -362,11 +363,11 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      * the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
      * defined in the <tt>key</tt>'s class.
      *
-     * @param   key   the key of the map entry.
-     * @param   value the new value of the map entry.
-     * @return  ICompletableFuture from which the old value of the key can be retrieved.
-     * @throws  NullPointerException if the specified key or value is null.
-     * @see     ICompletableFuture
+     * @param key   the key of the map entry.
+     * @param value the new value of the map entry.
+     * @return ICompletableFuture from which the old value of the key can be retrieved.
+     * @throws NullPointerException if the specified key or value is null.
+     * @see ICompletableFuture
      */
     ICompletableFuture<V> putAsync(K key, V value);
 
@@ -417,14 +418,14 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      * <p><b>Warning 2:</b></p>
      * Time resolution for TTL is seconds. The given TTL value is rounded to the next closest second value.
      *
-     * @param   key      the key of the map entry.
-     * @param   value    the new value of the map entry.
-     * @param   ttl      maximum time for this entry to stay in the map.
-     *                   0 means infinite.
-     * @param   timeunit time unit for the ttl.
-     * @return  ICompletableFuture from which the old value of the key can be retrieved.
-     * @throws  NullPointerException if the specified key or value is null.
-     * @see     ICompletableFuture
+     * @param key      the key of the map entry.
+     * @param value    the new value of the map entry.
+     * @param ttl      maximum time for this entry to stay in the map.
+     *                 0 means infinite.
+     * @param timeunit time unit for the ttl.
+     * @return ICompletableFuture from which the old value of the key can be retrieved.
+     * @throws NullPointerException if the specified key or value is null.
+     * @see ICompletableFuture
      */
     ICompletableFuture<V> putAsync(K key, V value, long ttl, TimeUnit timeunit);
 
@@ -473,12 +474,12 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      * defined in the <tt>key</tt>'s class.
      * <p/>
      *
-     * @param   key   the key of the map entry.
-     * @param   value the new value of the map entry.
-     * @return  ICompletableFuture on which to block waiting for the operation to complete or
-     *          register an {@link ExecutionCallback} to be invoked upon completion.
-     * @throws  NullPointerException if the specified key or value is null.
-     * @see     ICompletableFuture
+     * @param key   the key of the map entry.
+     * @param value the new value of the map entry.
+     * @return ICompletableFuture on which to block waiting for the operation to complete or
+     * register an {@link ExecutionCallback} to be invoked upon completion.
+     * @throws NullPointerException if the specified key or value is null.
+     * @see ICompletableFuture
      */
     ICompletableFuture<Void> setAsync(K key, V value);
 
@@ -530,16 +531,16 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      * <p><b>Warning 2:</b></p>
      * Time resolution for TTL is seconds. The given TTL value is rounded to the next closest second value.
      *
-     * @param   key      the key of the map entry.
-     * @param   value    the new value of the map entry.
-     * @param   ttl      maximum time for this entry to stay in the map.
-     *                   0 means infinite.
-     * @param   timeunit time unit for the ttl.
-     * @return  ICompletableFuture on which client code can block waiting for the operation to
-     *                            complete or provide an {@link ExecutionCallback} to be invoked
-     *                            upon set operation completion.
-     * @throws  NullPointerException if the specified key or value is null.
-     * @see     ICompletableFuture
+     * @param key      the key of the map entry.
+     * @param value    the new value of the map entry.
+     * @param ttl      maximum time for this entry to stay in the map.
+     *                 0 means infinite.
+     * @param timeunit time unit for the ttl.
+     * @return ICompletableFuture on which client code can block waiting for the operation to
+     * complete or provide an {@link ExecutionCallback} to be invoked
+     * upon set operation completion.
+     * @throws NullPointerException if the specified key or value is null.
+     * @see ICompletableFuture
      */
     ICompletableFuture<Void> setAsync(K key, V value, long ttl, TimeUnit timeunit);
 
@@ -553,11 +554,11 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      * the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
      * defined in the <tt>key</tt>'s class.
      *
-     * @param   key The key of the map entry to remove.
-     * @return  {@link ICompletableFuture} from which the value removed from the map can be
-     *          retrieved.
-     * @throws  NullPointerException if the specified key is null.
-     * @see     ICompletableFuture
+     * @param key The key of the map entry to remove.
+     * @return {@link ICompletableFuture} from which the value removed from the map can be
+     * retrieved.
+     * @throws NullPointerException if the specified key is null.
+     * @see ICompletableFuture
      */
     ICompletableFuture<V> removeAsync(K key);
 
@@ -1342,6 +1343,8 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      */
     Collection<V> values();
 
+    <R> R values(EntryAggregator aggregator);
+
     /**
      * Returns a {@link Set} clone of the mappings contained in this map.
      * <p/>
@@ -1424,6 +1427,8 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      * @see GroupProperty#QUERY_RESULT_SIZE_LIMIT
      */
     Collection<V> values(Predicate predicate);
+
+    <R> R values(Predicate predicate, EntryAggregator aggregator);
 
     /**
      * Returns the locally owned set of keys.
@@ -1549,7 +1554,7 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
      * <p/>
      *
      * @return result of entry process.
-     * @throws NullPointerException if the specified key is null.
+     * @throws NullPointerException     if the specified key is null.
      * @throws IllegalArgumentException if the specified keys set is empty
      */
     Map<K, Object> executeOnKeys(Set<K> keys, EntryProcessor entryProcessor);

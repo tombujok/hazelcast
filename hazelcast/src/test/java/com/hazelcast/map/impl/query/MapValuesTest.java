@@ -40,7 +40,7 @@ public class MapValuesTest extends HazelcastTestSupport {
 
     @Test(expected = NullPointerException.class)
     public void whenPredicateNull() {
-        map.values(null);
+        map.values((Predicate)null);
     }
 
     @Test
