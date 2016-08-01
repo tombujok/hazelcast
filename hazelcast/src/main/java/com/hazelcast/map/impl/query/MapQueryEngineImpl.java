@@ -166,11 +166,42 @@ public class MapQueryEngineImpl implements MapQueryEngine {
 
         AggregationResult aggregationResult = new AggregationResult(aggregator);
         if (hasPartitionVersion(initialPartitionStateVersion, predicate)) {
-            aggregator.accumulate(result);
+//            logger.severe("Setting partition versions on result");
             aggregationResult.setPartitionIds(initialPartitions);
+        } else {
+//            logger.severe("Result will be discarded");
         }
 
         updateStatistics(mapContainer);
+
+        if (parallelEvaluation) {
+//            logger.severe("ACUUMULATING parallel - started");
+            int counter = 0;
+            int threadCount = 8;
+            List<QueryableEntry>[] entriesSplit = new List[threadCount];
+            for (int i = 0; i < threadCount; i++) {
+                entriesSplit[i] = new ArrayList<QueryableEntry>();
+            }
+            for (QueryableEntry entry : result) {
+                entriesSplit[counter++ % threadCount].add(entry);
+            }
+
+            Collection<EntryAggregator> aggregators = accumulateParallel(aggregator, entriesSplit);
+            for (EntryAggregator aggr : aggregators) {
+                aggregator.combine(aggr);
+            }
+            
+//            logger.severe("ACUUMULATING parallel - FINISHED");
+        } else {
+//            logger.severe("ACUUMULATING sequential - started");
+            for (QueryableEntry entry : result) {
+                aggregator.accumulate(entry);
+            }
+//            logger.severe("ACUUMULATING sequential - FINISHED");
+        }
+
+
+//        logger.severe("AFTER STATS");
 
         return aggregationResult;
     }
@@ -265,6 +296,29 @@ public class MapQueryEngineImpl implements MapQueryEngine {
         return result;
     }
 
+    protected Collection<EntryAggregator> accumulateParallel(EntryAggregator aggregator, Collection<QueryableEntry> entries[])
+            throws InterruptedException, ExecutionException {
+        Collection<EntryAggregator> result = new ArrayList<EntryAggregator>();
+
+        List<Future<EntryAggregator>> futures
+                = new ArrayList<Future<EntryAggregator>>(entries.length);
+
+        for (Collection<QueryableEntry> split : entries) {
+            AccumulatePartitionCallable task = new AccumulatePartitionCallable(split,
+                    (EntryAggregator) serializationService.toObject(serializationService.toData(aggregator)));
+            Future<EntryAggregator> future = parallelExecutor.submit(task);
+            futures.add(future);
+        }
+
+        Collection<EntryAggregator> returnedResults = returnWithDeadline(futures,
+                QUERY_EXECUTION_TIMEOUT_MINUTES, MINUTES, RETHROW_EVERYTHING);
+        for (EntryAggregator returnedResult : returnedResults) {
+            result.add(returnedResult);
+        }
+
+        return result;
+    }
+
     protected Collection<QueryableEntry> queryParallelForPaging(String name, PagingPredicate predicate, Collection<Integer> partitions)
             throws InterruptedException, ExecutionException {
         Collection<QueryableEntry> result = new ArrayList<QueryableEntry>();
@@ -292,6 +346,7 @@ public class MapQueryEngineImpl implements MapQueryEngine {
     protected static Collection<Collection<QueryableEntry>> getResult(List<Future<Collection<QueryableEntry>>> lsFutures) {
         return returnWithDeadline(lsFutures, QUERY_EXECUTION_TIMEOUT_MINUTES, MINUTES, RETHROW_EVERYTHING);
     }
+
 
     protected boolean hasPartitionVersion(int expectedVersion, Predicate predicate) {
         if (expectedVersion != partitionService.getPartitionStateVersion()) {
@@ -504,18 +559,15 @@ public class MapQueryEngineImpl implements MapQueryEngine {
             queryResultSizeLimiter.checkMaxResultLimitOnLocalPartitions(mapName);
         }
 
-
         Set<Integer> partitionIds = getAllPartitionIds();
         // query the local partitions
 
         try {
-            // List<Future<AggregationResult>> futures = aggregateOnMembers(mapName, predicate, aggregator);
-            AggregationResult result = aggregateLocalPartitions(mapName, predicate, aggregator);
+            List<Future<AggregationResult>> futures = aggregateOnMembers(mapName, predicate, aggregator);
             // modifies partitionIds list!
-            // addResultsOfAggregation(futures, aggregator, partitionIds);
-            aggregator.combine(result.getAggregator());
+            addResultsOfAggregation(futures, aggregator, partitionIds);
             if (partitionIds.isEmpty()) {
-            return;
+                return;
             }
         } catch (Throwable t) {
             if (t.getCause() instanceof QueryResultSizeExceededException) {
@@ -524,15 +576,6 @@ public class MapQueryEngineImpl implements MapQueryEngine {
             logger.warning("Could not get results", t);
         }
 
-        // query the remaining partitions that are not local to the member
-        try {
-            List<Future<AggregationResult>> futures = aggregatePartitionsSingle(mapName, predicate, partitionIds, aggregator);
-            addResultsOfAggregation(futures, aggregator, partitionIds);
-        } catch (Throwable t) {
-            throw rethrow(t);
-        }
-
-
 //        // query the remaining partitions that are not local to the member
 //        try {
 //            List<Future<AggregationResult>> futures = aggregatePartitions(mapName, predicate, partitionIds, aggregator);
@@ -540,10 +583,10 @@ public class MapQueryEngineImpl implements MapQueryEngine {
 //        } catch (Throwable t) {
 //            throw rethrow(t);
 //        }
-//
-//        if (partitionIds.isEmpty() == false) {
-//            throw new RuntimeException("Did not query all partitions, pending: " + partitionIds);
-//        }
+
+        if (partitionIds.isEmpty() == false) {
+            throw new RuntimeException("Did not query all partitions, pending: " + partitionIds);
+        }
 
     }
 
@@ -622,28 +665,6 @@ public class MapQueryEngineImpl implements MapQueryEngine {
         for (Integer partitionId : partitionIds) {
             EntryAggregator clone = serializationService.toObject(serializationService.toData(aggregator));
             Operation op = new AggregationPartitionOperation(mapName, predicate, clone);
-            op.setPartitionId(partitionId);
-            try {
-                Future<AggregationResult> future = operationService
-                        .invokeOnPartition(MapService.SERVICE_NAME, op, partitionId);
-                futures.add(future);
-            } catch (Throwable t) {
-                throw rethrow(t);
-            }
-        }
-        return futures;
-    }
-
-    protected List<Future<AggregationResult>> aggregatePartitionsSingle(String mapName, Predicate predicate,
-                                                                        Collection<Integer> partitionIds, EntryAggregator aggregator) {
-        if (partitionIds == null || partitionIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Future<AggregationResult>> futures = new ArrayList<Future<AggregationResult>>(partitionIds.size());
-        for (Integer partitionId : partitionIds) {
-            EntryAggregator clone = serializationService.toObject(serializationService.toData(aggregator));
-            Operation op = new AggregationSingleOperation(mapName, predicate, clone);
             op.setPartitionId(partitionId);
             try {
                 Future<AggregationResult> future = operationService
@@ -782,6 +803,23 @@ public class MapQueryEngineImpl implements MapQueryEngine {
         public Collection<QueryableEntry> call() throws Exception {
             MapQueryEngineImpl queryEngine = (MapQueryEngineImpl) mapServiceContext.getMapQueryEngine(name);
             return queryEngine.queryTheLocalPartition(name, predicate, partition);
+        }
+    }
+
+    protected final class AccumulatePartitionCallable implements Callable<EntryAggregator> {
+
+        private final Collection<QueryableEntry> entries;
+        private final EntryAggregator aggregator;
+
+        protected AccumulatePartitionCallable(Collection<QueryableEntry> entries, EntryAggregator aggregator) {
+            this.entries = entries;
+            this.aggregator = aggregator;
+        }
+
+        @Override
+        public EntryAggregator call() throws Exception {
+            aggregator.accumulate(entries);
+            return aggregator;
         }
     }
 }

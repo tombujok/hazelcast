@@ -49,6 +49,7 @@ public class AggregationOperation extends MapOperation implements ReadonlyOperat
     public void run() throws Exception {
         MapQueryEngine queryEngine = mapServiceContext.getMapQueryEngine(name);
         result = queryEngine.aggregateLocalPartitions(name, predicate, aggregator);
+        getLogger().severe("!! " + Thread.currentThread().getName() + " FINISHED");
     }
 
     @Override

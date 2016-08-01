@@ -20,10 +20,10 @@ import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.impl.operationexecutor.OperationRunner;
 import com.hazelcast.spi.impl.operationexecutor.OperationRunnerFactory;
 
-class OperationRunnerFactoryImpl implements OperationRunnerFactory {
+public class OperationRunnerFactoryImpl implements OperationRunnerFactory {
     private OperationServiceImpl operationService;
 
-    OperationRunnerFactoryImpl(OperationServiceImpl operationService) {
+    public OperationRunnerFactoryImpl(OperationServiceImpl operationService) {
         this.operationService = operationService;
     }
 

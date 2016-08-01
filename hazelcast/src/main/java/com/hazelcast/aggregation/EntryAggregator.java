@@ -38,28 +38,28 @@ public interface EntryAggregator<R, K, V> extends Serializable {
     /**
      * @param entry entry to accumulate.
      */
-    public abstract void accumulate(Map.Entry<K, V> entry);
+    void accumulate(Map.Entry<K, V> entry);
 
     /**
      * @param entries entries to accumulate.
      */
-    public abstract void accumulate(Collection<Map.Entry<K, V>> entries);
+    void accumulate(Collection<Map.Entry<K, V>> entries);
 
     /**
      * @param aggregator aggregator providing intermediary results to be combined into the results of this aggregator.
      */
-    public abstract void combine(EntryAggregator aggregator);
+    void combine(EntryAggregator aggregator);
 
     /**
      * @param aggregators aggregators providing intermediary results to be combined into the results of this aggregator.
      */
-    public abstract void combine(Collection<EntryAggregator> aggregators);
+    void combine(Collection<EntryAggregator> aggregators);
 
     /**
      * Returns the result of the aggregation. The result may be calculated in this call or cached by the aggregator.
      *
      * @return returns the result of the aggregation.
      */
-    public abstract R aggregate();
+    R aggregate();
 
 }

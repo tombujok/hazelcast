@@ -33,6 +33,7 @@ public class DoubleAverageAggregator<K, V> extends AbstractEntryAggregator<Doubl
     @Override
     public void accumulate(Map.Entry<K, V> entry) {
         count++;
+        sum += (Double) extract(entry);
     }
 
     @Override
