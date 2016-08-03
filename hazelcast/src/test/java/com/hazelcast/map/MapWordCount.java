@@ -189,11 +189,6 @@ public class MapWordCount extends HazelcastTestSupport {
 
         Map<String, MutableInt> result = new HashMap<String, MutableInt>(1000);
 
-        @Override
-        public void accumulate(Map.Entry<String, String> entry) {
-            accumulate(entry.getValue(), 1);
-        }
-
         public void accumulate(String value, int times) {
             StringTokenizer tokenizer = new StringTokenizer(value);
 
@@ -213,13 +208,6 @@ public class MapWordCount extends HazelcastTestSupport {
         public void accumulate(Collection<Map.Entry<String, String>> entries) {
             for (Map.Entry<String, String> entry : entries) {
                 accumulate(entry.getValue(), 1);
-            }
-        }
-
-        @Override
-        public void combine(Collection<EntryAggregator> aggregators) {
-            for (EntryAggregator aggregator : aggregators) {
-                combine(aggregator);
             }
         }
 

@@ -31,12 +31,6 @@ public class DoubleAverageAggregator<K, V> extends AbstractEntryAggregator<Doubl
     }
 
     @Override
-    public void accumulate(Map.Entry<K, V> entry) {
-        count++;
-        sum += (Double) extract(entry);
-    }
-
-    @Override
     public void accumulate(Collection<Map.Entry<K, V>> entries) {
         count += entries.size();
         for (Map.Entry<K, V> entry : entries) {
@@ -49,13 +43,6 @@ public class DoubleAverageAggregator<K, V> extends AbstractEntryAggregator<Doubl
         DoubleAverageAggregator doubleAverageAggregator = (DoubleAverageAggregator) aggregator;
         this.sum += doubleAverageAggregator.sum;
         this.count += doubleAverageAggregator.count;
-    }
-
-    @Override
-    public void combine(Collection<EntryAggregator> aggregators) {
-        for (EntryAggregator aggregator : aggregators) {
-            combine(aggregator);
-        }
     }
 
     @Override

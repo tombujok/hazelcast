@@ -16,8 +16,6 @@
 
 package com.hazelcast.aggregation;
 
-import com.hazelcast.query.impl.Extractable;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
@@ -25,8 +23,9 @@ import java.util.Map;
 /**
  * Base class for all aggregators. Exposes API for parallel two-phase aggregations:
  * - accumulation of entries by multiple instance of aggregators
- * - combining all aggregators to calculate the final result
+ * - combining all aggregators into one to calculate the final result
  * <p>
+ * EntryAggregator does not have to be thread-safe.
  * accumulate() and combine() calls may be interwoven.
  *
  * @param <R> aggregation result
@@ -34,11 +33,6 @@ import java.util.Map;
  * @param <V> entry value type
  */
 public interface EntryAggregator<R, K, V> extends Serializable {
-
-    /**
-     * @param entry entry to accumulate.
-     */
-    void accumulate(Map.Entry<K, V> entry);
 
     /**
      * @param entries entries to accumulate.
@@ -49,11 +43,6 @@ public interface EntryAggregator<R, K, V> extends Serializable {
      * @param aggregator aggregator providing intermediary results to be combined into the results of this aggregator.
      */
     void combine(EntryAggregator aggregator);
-
-    /**
-     * @param aggregators aggregators providing intermediary results to be combined into the results of this aggregator.
-     */
-    void combine(Collection<EntryAggregator> aggregators);
 
     /**
      * Returns the result of the aggregation. The result may be calculated in this call or cached by the aggregator.

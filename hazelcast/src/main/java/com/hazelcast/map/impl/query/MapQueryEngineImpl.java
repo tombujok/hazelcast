@@ -190,13 +190,11 @@ public class MapQueryEngineImpl implements MapQueryEngine {
             for (EntryAggregator aggr : aggregators) {
                 aggregator.combine(aggr);
             }
-            
+
 //            logger.severe("ACUUMULATING parallel - FINISHED");
         } else {
 //            logger.severe("ACUUMULATING sequential - started");
-            for (QueryableEntry entry : result) {
-                aggregator.accumulate(entry);
-            }
+            aggregator.accumulate(result);
 //            logger.severe("ACUUMULATING sequential - FINISHED");
         }
 
