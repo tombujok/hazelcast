@@ -104,4 +104,40 @@ public class MapPutAllWithBatchingTest extends HazelcastTestSupport {
             assertEquals("Expected that key and value are the same", entry.getKey(), entry.getValue());
         }
     }
+
+
+    @Test
+    public void putAllPerformanceTest() {
+        String mapName = randomMapName();
+        HazelcastInstance hz = createHazelcastInstance();
+
+        int expectedEntryCount = 10000;
+
+
+        Map<Integer, Integer> inputMap = new HashMap<Integer, Integer>(expectedEntryCount);
+        for (int i = 0; i < expectedEntryCount; i++) {
+            inputMap.put(i, i);
+        }
+
+
+        gc();
+        // assert that the map is empty
+        IMap<Integer, Integer> map = hz.getMap(mapName);
+        assertEquals("Expected an empty map", 0, map.size());
+
+
+        long start = System.currentTimeMillis();
+        map.putAll(inputMap);
+        long stop = System.currentTimeMillis();
+
+        System.err.println("TimeTaken="+(stop-start));
+
+    }
+
+    private static void gc() {
+        for(int i = 0 ; i < 10 ; i++) {
+            System.gc();
+        }
+    }
+
 }

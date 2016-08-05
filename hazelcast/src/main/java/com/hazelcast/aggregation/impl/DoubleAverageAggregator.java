@@ -21,7 +21,7 @@ import com.hazelcast.aggregation.EntryAggregator;
 import java.util.Collection;
 import java.util.Map;
 
-public class DoubleAverageAggregator<K, V> extends AbstractEntryAggregator<Double, K, V> {
+public class DoubleAverageAggregator<K, V> extends AbstractEntryAggregator<K, V, Double, DoubleAverageAggregator<K, V>> {
 
     private double sum;
     private int count;
@@ -39,10 +39,9 @@ public class DoubleAverageAggregator<K, V> extends AbstractEntryAggregator<Doubl
     }
 
     @Override
-    public void combine(EntryAggregator aggregator) {
-        DoubleAverageAggregator doubleAverageAggregator = (DoubleAverageAggregator) aggregator;
-        this.sum += doubleAverageAggregator.sum;
-        this.count += doubleAverageAggregator.count;
+    public void combine(DoubleAverageAggregator<K, V> aggregator) {
+        this.sum += aggregator.sum;
+        this.count += aggregator.count;
     }
 
     @Override

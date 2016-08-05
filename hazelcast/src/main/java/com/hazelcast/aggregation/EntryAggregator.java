@@ -32,9 +32,11 @@ import java.util.Map;
  * @param <K> entry key type
  * @param <V> entry value type
  */
-public interface EntryAggregator<R, K, V> extends Serializable {
+public interface EntryAggregator<K, V, R, A extends EntryAggregator<K, V, R, A >> extends Serializable {
 
     /**
+     * Accumulates t
+     *
      * @param entries entries to accumulate.
      */
     void accumulate(Collection<Map.Entry<K, V>> entries);
@@ -42,7 +44,7 @@ public interface EntryAggregator<R, K, V> extends Serializable {
     /**
      * @param aggregator aggregator providing intermediary results to be combined into the results of this aggregator.
      */
-    void combine(EntryAggregator aggregator);
+    void combine(A aggregator);
 
     /**
      * Returns the result of the aggregation. The result may be calculated in this call or cached by the aggregator.

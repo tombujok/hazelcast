@@ -23,11 +23,11 @@ public final class Aggregators {
     private Aggregators() {
     }
 
-    public static <K, V> EntryAggregator<Double, K, V> doubleAverage() {
+    public static <K, V> EntryAggregator<Double, K, V, DoubleAverageAggregator<K, V>> doubleAverage() {
         return new DoubleAverageAggregator<K, V>(null);
     }
 
-    public static <K, V> EntryAggregator<Double, K, V> doubleAverage(String attributePath) {
+    public static <K, V> EntryAggregator<Double, K, V, DoubleAverageAggregator<K, V>> doubleAverage(String attributePath) {
         return new DoubleAverageAggregator<K, V>(attributePath);
     }
 
