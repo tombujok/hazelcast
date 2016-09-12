@@ -24,6 +24,7 @@ import com.hazelcast.map.impl.iterator.MapKeysWithCursor;
 import com.hazelcast.map.impl.operation.ContainsKeyOperation;
 import com.hazelcast.map.impl.operation.EvictBackupOperation;
 import com.hazelcast.map.impl.operation.GetOperation;
+import com.hazelcast.map.impl.operation.GetOperation39;
 import com.hazelcast.map.impl.operation.PutBackupOperation;
 import com.hazelcast.map.impl.operation.PutOperation;
 import com.hazelcast.map.impl.operation.RemoveBackupOperation;
@@ -56,8 +57,9 @@ public final class MapDataSerializerHook implements DataSerializerHook {
     public static final int CONTAINS_KEY = 12;
     public static final int KEYS_WITH_CURSOR = 13;
     public static final int ENTRIES_WITH_CURSOR = 14;
+    public static final int GET_39 = 15;
 
-    private static final int LEN = ENTRIES_WITH_CURSOR + 1;
+    private static final int LEN = GET_39 + 1;
 
     @Override
     public int getFactoryId() {
@@ -76,6 +78,11 @@ public final class MapDataSerializerHook implements DataSerializerHook {
         constructors[GET] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
             public IdentifiedDataSerializable createNew(Integer arg) {
                 return new GetOperation();
+            }
+        };
+        constructors[GET_39] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
+            public IdentifiedDataSerializable createNew(Integer arg) {
+                return new GetOperation39();
             }
         };
         constructors[REMOVE] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {

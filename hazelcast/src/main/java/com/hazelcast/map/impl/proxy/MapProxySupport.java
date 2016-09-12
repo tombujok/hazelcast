@@ -88,6 +88,7 @@ import com.hazelcast.util.FutureUtil;
 import com.hazelcast.util.IterableUtil;
 import com.hazelcast.util.MutableLong;
 import com.hazelcast.util.ThreadUtil;
+import com.hazelcast.version.Version;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.ArrayList;
@@ -303,9 +304,23 @@ abstract class MapProxySupport extends AbstractDistributedObject<MapService> imp
                 return fromBackup;
             }
         }
-        MapOperation operation = operationProvider.createGetOperation(name, key);
-        operation.setThreadId(ThreadUtil.getThreadId());
-        return invokeOperation(key, operation);
+
+        // we're on a 3.9 node, it still has to support 3.8 "legacy" mode
+        if (getClusterVersion().isVersion(3, 8)) {
+            // legacy mode
+            MapOperation operation = operationProvider.createGetOperation(name, key);
+            operation.setThreadId(ThreadUtil.getThreadId());
+            return invokeOperation(key, operation);
+        } else {
+            // new mode
+            MapOperation operation = operationProvider.createGetOperation39(name, key);
+            operation.setThreadId(ThreadUtil.getThreadId());
+            return invokeOperation(key, operation);
+        }
+    }
+
+    private Version getClusterVersion() {
+        return getNodeEngine().getClusterService().getClusterVersion();
     }
 
     private Data readBackupDataOrNull(Data key) {

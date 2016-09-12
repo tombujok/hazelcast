@@ -20,29 +20,35 @@ import com.hazelcast.concurrent.lock.LockWaitNotifyKey;
 import com.hazelcast.core.OperationTimeoutException;
 import com.hazelcast.map.impl.MapDataSerializerHook;
 import com.hazelcast.map.impl.MapService;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.spi.BlockingOperation;
 import com.hazelcast.spi.DefaultObjectNamespace;
 import com.hazelcast.spi.WaitNotifyKey;
 
-public final class GetOperation extends ReadonlyKeyBasedMapOperation
+import java.io.IOException;
+
+public final class GetOperation39 extends ReadonlyKeyBasedMapOperation
         implements IdentifiedDataSerializable, BlockingOperation {
 
     private Data result;
+    private boolean optimisationFlag;
 
-    public GetOperation() {
+    public GetOperation39() {
     }
 
-    public GetOperation(String name, Data dataKey) {
+    public GetOperation39(String name, Data dataKey) {
         super(name, dataKey);
 
         this.dataKey = dataKey;
+        this.optimisationFlag = true;
     }
 
     @Override
     public void run() {
-        System.err.println("Invoking GetOperation old");
+        System.err.println("Invoking GetOperation39 with optimisationFlag=" + optimisationFlag);
         result = mapServiceContext.toData(recordStore.get(dataKey, false));
     }
 
@@ -81,6 +87,18 @@ public final class GetOperation extends ReadonlyKeyBasedMapOperation
 
     @Override
     public int getId() {
-        return MapDataSerializerHook.GET;
+        return MapDataSerializerHook.GET_39;
+    }
+
+    @Override
+    protected void writeInternal(ObjectDataOutput out) throws IOException {
+        super.writeInternal(out);
+        out.writeBoolean(optimisationFlag);
+    }
+
+    @Override
+    protected void readInternal(ObjectDataInput in) throws IOException {
+        super.readInternal(in);
+        optimisationFlag = in.readBoolean();
     }
 }

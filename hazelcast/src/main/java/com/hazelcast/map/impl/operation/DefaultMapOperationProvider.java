@@ -215,6 +215,11 @@ public class DefaultMapOperationProvider implements MapOperationProvider {
     }
 
     @Override
+    public MapOperation createGetOperation39(String name, Data dataKey) {
+        return new GetOperation39(name, dataKey);
+    }
+
+    @Override
     public MapOperation createLoadAllOperation(String name, List<Data> keys, boolean replaceExistingValues) {
         return new LoadAllOperation(name, keys, replaceExistingValues);
     }

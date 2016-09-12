@@ -60,6 +60,14 @@ public final class Version implements DataSerializable {
         return hyphenIndex >= 0 ? token.substring(0, hyphenIndex) : token;
     }
 
+    public boolean isVersion(int major, int minor) {
+        return minor == this.minor && major == this.major;
+    }
+
+    public boolean isVersion(int major, int minor, int patch) {
+        return patch == this.patch && minor == this.minor && major == this.major;
+    }
+
     public byte getMajor() {
         return major;
     }

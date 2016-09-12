@@ -128,6 +128,11 @@ abstract class MapOperationProviderDelegator implements MapOperationProvider {
     }
 
     @Override
+    public MapOperation createGetOperation39(String name, Data dataKey) {
+        return getDelegate().createGetOperation39(name, dataKey);
+    }
+
+    @Override
     public MapOperation createLoadAllOperation(String name, List<Data> keys, boolean replaceExistingValues) {
         return getDelegate().createLoadAllOperation(name, keys, replaceExistingValues);
     }
