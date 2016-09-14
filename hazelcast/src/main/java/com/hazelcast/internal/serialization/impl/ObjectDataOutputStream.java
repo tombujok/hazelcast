@@ -20,6 +20,7 @@ import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.nio.Bits;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
+import com.hazelcast.version.Version;
 
 import java.io.Closeable;
 import java.io.DataOutputStream;
@@ -34,6 +35,7 @@ public class ObjectDataOutputStream extends OutputStream implements ObjectDataOu
     private final InternalSerializationService serializationService;
     private final DataOutputStream dataOut;
     private final ByteOrder byteOrder;
+    private Version version = Version.UNKNOWN;
 
     public ObjectDataOutputStream(OutputStream outputStream, InternalSerializationService serializationService) {
         this.serializationService = serializationService;
@@ -278,5 +280,14 @@ public class ObjectDataOutputStream extends OutputStream implements ObjectDataOu
 
     private boolean bigEndian() {
         return byteOrder == ByteOrder.BIG_ENDIAN;
+    }
+
+    public void setVersion(Version version) {
+        this.version = version;
+    }
+
+    @Override
+    public Version getVersion() {
+        return version;
     }
 }

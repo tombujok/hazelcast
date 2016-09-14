@@ -17,16 +17,25 @@
 package com.hazelcast.map.impl.operation;
 
 import com.hazelcast.map.impl.MapDataSerializerHook;
+import com.hazelcast.map.impl.MapVersionedDataSerializerHook;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.Versioned;
 
-public class PutOperation extends BasePutOperation implements IdentifiedDataSerializable {
+import java.io.IOException;
+
+public class PutOperation extends BasePutOperation implements IdentifiedDataSerializable, Versioned {
+
+    private PutOperation op;
 
     public PutOperation() {
     }
 
     public PutOperation(String name, Data dataKey, Data value, long ttl) {
         super(name, dataKey, value, ttl);
+        this.op = new PutOperation();
     }
 
     @Override
@@ -41,11 +50,32 @@ public class PutOperation extends BasePutOperation implements IdentifiedDataSeri
 
     @Override
     public int getFactoryId() {
-        return MapDataSerializerHook.F_ID;
+        return (short) MapDataSerializerHook.F_ID;
     }
 
     @Override
     public int getId() {
         return MapDataSerializerHook.PUT;
     }
+
+    @Override
+    public void readInternal(ObjectDataInput in) throws IOException {
+        super.readInternal(in);
+        if (in.getVersion().isVersion(3, 9)) {
+            op = in.readObject();
+        }
+    }
+
+    @Override
+    protected void writeInternal(ObjectDataOutput out) throws IOException {
+        super.writeInternal(out);
+        if (out.getVersion().isVersion(3, 9)) {
+            out.writeObject(op);
+        }
+    }
+
+    // assumptions
+    // -> 3.8 will never send/receive version 3.8 if cluster version is 3.7
+    // -> 3.8 may send/receive version 3.7 if cluster version is 3.8 (since other operations may be in-flight)
+
 }

@@ -16,15 +16,18 @@
 
 package com.hazelcast.nio.serialization;
 
+import com.hazelcast.nio.DataFactory;
+
 /**
  * DataSerializableFactory is used to create IdentifiedDataSerializable instances during de-serialization.
  *
  * @see com.hazelcast.nio.serialization.IdentifiedDataSerializable
  */
-public interface DataSerializableFactory {
+public interface DataSerializableFactory extends DataFactory {
 
     /**
      * Creates an IdentifiedDataSerializable instance using given type id
+     *
      * @param typeId IdentifiedDataSerializable type id
      * @return IdentifiedDataSerializable instance or null if type id is not known by this factory
      */

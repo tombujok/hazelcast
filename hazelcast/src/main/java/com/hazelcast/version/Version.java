@@ -33,6 +33,11 @@ public final class Version implements DataSerializable {
      */
     public static final Version UNKNOWN = new Version(0, 0, 0);
 
+    public static final Version V3_6 = of("3.6");
+    public static final Version V3_7 = of("3.7");
+    public static final Version V3_8 = of("3.8");
+    public static final Version V3_9 = of("3.9");
+
     private byte major;
     private byte minor;
     private byte patch;

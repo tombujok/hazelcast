@@ -17,9 +17,11 @@
 package com.hazelcast.internal.serialization.impl;
 
 
+import com.hazelcast.instance.Node;
 import com.hazelcast.internal.serialization.DataSerializerHook;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ClassLoaderUtil;
+import com.hazelcast.nio.DataFactory;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
@@ -27,9 +29,11 @@ import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.HazelcastSerializationException;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.nio.serialization.StreamSerializer;
+import com.hazelcast.nio.serialization.Versioned;
 import com.hazelcast.util.ExceptionUtil;
 import com.hazelcast.util.ServiceLoader;
 import com.hazelcast.util.collection.Int2ObjectHashMap;
+import com.hazelcast.version.Version;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -54,14 +58,18 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
     private static final String FACTORY_ID = "com.hazelcast.DataSerializerHook";
 
     private final Int2ObjectHashMap<DataSerializableFactory> factories = new Int2ObjectHashMap<DataSerializableFactory>();
+//    private final Int2ObjectHashMap<VersionedDataSerializableFactory> versionedFactories = new Int2ObjectHashMap<VersionedDataSerializableFactory>();
+
+    private final Node node;
 
     DataSerializableSerializer(Map<Integer, ? extends DataSerializableFactory> dataSerializableFactories,
-                               ClassLoader classLoader) {
+                               ClassLoader classLoader, Node node) {
+        this.node = node;
         try {
             final Iterator<DataSerializerHook> hooks = ServiceLoader.iterator(DataSerializerHook.class, FACTORY_ID, classLoader);
             while (hooks.hasNext()) {
                 DataSerializerHook hook = hooks.next();
-                final DataSerializableFactory factory = hook.createFactory();
+                final DataFactory factory = hook.createFactory();
                 if (factory != null) {
                     register(hook.getFactoryId(), factory);
                 }
@@ -77,7 +85,7 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
         }
     }
 
-    private void register(int factoryId, DataSerializableFactory factory) {
+    private void register(int factoryId, DataFactory factory) {
         final DataSerializableFactory current = factories.get(factoryId);
         if (current != null) {
             if (current.equals(factory)) {
@@ -88,7 +96,11 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
                         + current + " -> " + factory);
             }
         } else {
-            factories.put(factoryId, factory);
+//            if (factory instanceof VersionedDataSerializableFactory) {
+//                versionedFactories.put(factoryId, (VersionedDataSerializableFactory) factory);
+//            } else {
+            factories.put(factoryId, (DataSerializableFactory) factory);
+//            }
         }
     }
 
@@ -100,14 +112,19 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
     @Override
     public DataSerializable read(ObjectDataInput in) throws IOException {
         final DataSerializable ds;
-        final boolean identified = in.readBoolean();
+        final byte identified = in.readByte();
         int id = 0;
         int factoryId = 0;
         String className = null;
         try {
-            // If you ever change the way this is serialized think about to change
-            // BasicOperationService::extractOperationCallId
-            if (identified) {
+            if (identified == 0) {
+                className = in.readUTF();
+                ds = ClassLoaderUtil.newInstance(in.getClassLoader(), className);
+
+                ds.readData(in);
+            } else {
+                // If you ever change the way this is serialized think about to change
+                // BasicOperationService::extractOperationCallId
                 factoryId = in.readInt();
                 final DataSerializableFactory dsf = factories.get(factoryId);
                 if (dsf == null) {
@@ -120,11 +137,43 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
                             + " is not be able to create an instance for id: " + id + " on factoryId: " + factoryId);
                 }
                 // TODO: @mm - we can check if DS class is final.
-            } else {
-                className = in.readUTF();
-                ds = ClassLoaderUtil.newInstance(in.getClassLoader(), className);
+
+                if (identified == 2) {
+                    // My brilliance amuses even myself :) (just kidding)
+                    byte version = in.readByte();
+                    Version v = node.getClusterService().getClusterVersion();
+                    Version objectVersion = Version.of(v.getMajor(), version, v.getPatch());
+
+                    setVersion(in, objectVersion);
+                } else {
+                    setVersion(in, Version.UNKNOWN);
+                }
+
+                ds.readData(in);
             }
-            ds.readData(in);
+//            else {
+//                // If you ever change the way this is serialized think about to change
+//                // BasicOperationService::extractOperationCallId
+//                factoryId = in.readInt(); // can be compressed to short
+//                final VersionedDataSerializableFactory dsf = versionedFactories.get(factoryId);
+//                if (dsf == null) {
+//                    throw new HazelcastSerializationException("No DataSerializerFactory registered for namespace: " + factoryId);
+//                }
+//                id = in.readInt();
+//                byte version = in.readByte(); // can be compressed to short
+//                Versioned vds = dsf.create(id, version);
+//                if (vds == null) {
+//                    throw new HazelcastSerializationException(dsf
+//                            + " is not be able to create an instance for id: " + id + " on factoryId: " + factoryId);
+//                }
+//
+//                in.setVersion(version);
+//
+//                // TODO: @mm - we can check if DS class is final.
+//                vds.readData(in);
+//                return vds;
+//            }
+
             return ds;
         } catch (Exception e) {
             throw rethrowReadException(id, factoryId, className, e);
@@ -147,18 +196,65 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
 
     @Override
     public void write(ObjectDataOutput out, DataSerializable obj) throws IOException {
+        Version version = node.getClusterService().getClusterVersion();
         // If you ever change the way this is serialized think about to change
         // BasicOperationService::extractOperationCallId
-        final boolean identified = obj instanceof IdentifiedDataSerializable;
-        out.writeBoolean(identified);
-        if (identified) {
+        byte identified = 0;
+        if (obj instanceof IdentifiedDataSerializable) {
+            if (obj instanceof Versioned) {
+                identified = 2;
+            } else {
+                identified = 1;
+            }
+        }
+
+        out.writeByte(identified);
+        if (identified == 0) {
+            out.writeUTF(obj.getClass().getName());
+        } else if (identified == 1 || identified == 2) {
             final IdentifiedDataSerializable ds = (IdentifiedDataSerializable) obj;
             out.writeInt(ds.getFactoryId());
             out.writeInt(ds.getId());
-        } else {
-            out.writeUTF(obj.getClass().getName());
+            if (identified == 2) {
+                out.writeByte(version.getMinor());
+            }
         }
+//        else {
+//            final Versioned ds = (Versioned) obj;
+//            out.writeShort(ds.getFactoryId());
+//            out.writeShort(ds.getId());
+//            out.writeByte(ds.getVersion());
+//        }
+
+        setVersion(out, version);
         obj.writeData(out);
+    }
+
+    // UGLY!!! I know but it's just a PoC
+    private void setVersion(ObjectDataOutput out, Version version) {
+        if (out instanceof UnsafeObjectDataOutput) {
+            ((UnsafeObjectDataOutput) out).setVersion(version);
+        } else if (out instanceof ByteArrayObjectDataOutput) {
+            ((ByteArrayObjectDataOutput) out).setVersion(version);
+        } else if (out instanceof ObjectDataOutputStream) {
+            ((ObjectDataOutputStream) out).setVersion(version);
+
+        } else {
+            throw new IllegalArgumentException("Illegal output stream implementation " + out.getClass());
+        }
+    }
+
+    // UGLY!!! I know but it's just a PoC
+    private void setVersion(ObjectDataInput in, Version version) {
+        if (in instanceof UnsafeObjectDataInput) {
+            ((UnsafeObjectDataInput) in).setVersion(version);
+        } else if (in instanceof ObjectDataInputStream) {
+            ((ObjectDataInputStream) in).setVersion(version);
+        } else if (in instanceof ByteArrayObjectDataInput) {
+            ((ByteArrayObjectDataInput) in).setVersion(version);
+        } else {
+            throw new IllegalArgumentException("Illegal input stream implementation " + in.getClass());
+        }
     }
 
     @Override

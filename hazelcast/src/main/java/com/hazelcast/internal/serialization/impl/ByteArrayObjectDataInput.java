@@ -20,6 +20,7 @@ import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.nio.Bits;
 import com.hazelcast.nio.BufferObjectDataInput;
 import com.hazelcast.nio.serialization.Data;
+import com.hazelcast.version.Version;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -47,6 +48,7 @@ class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataIn
     char[] charBuffer;
 
     private final boolean bigEndian;
+    private Version version = Version.UNKNOWN;
 
     ByteArrayObjectDataInput(byte[] data, InternalSerializationService service, ByteOrder byteOrder) {
         this(data, 0, service, byteOrder);
@@ -65,6 +67,11 @@ class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataIn
         this.data = data;
         this.size = data != null ? data.length : 0;
         this.pos = offset;
+    }
+
+    @Override
+    public void setVersion(Version version) {
+        this.version = version;
     }
 
     @Override
@@ -690,6 +697,11 @@ class ByteArrayObjectDataInput extends InputStream implements BufferObjectDataIn
 
     public ByteOrder getByteOrder() {
         return bigEndian ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+    }
+
+    @Override
+    public Version getVersion() {
+        return version;
     }
 
     @Override

@@ -14,18 +14,8 @@
  * limitations under the License.
  */
 
-package com.hazelcast.internal.serialization;
+package com.hazelcast.nio;
 
-import com.hazelcast.nio.DataFactory;
-
-public interface DataSerializerHook {
-
-    int F_ID_OFFSET_WEBMODULE = -1000;
-    int F_ID_OFFSET_HIBERNATE = -2000;
-
-    int getFactoryId();
-
-    DataFactory createFactory();
+public interface DataFactory {
 
 }
-

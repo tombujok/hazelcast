@@ -20,6 +20,7 @@ import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.nio.Bits;
 import com.hazelcast.nio.BufferObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
+import com.hazelcast.version.Version;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -42,6 +43,7 @@ class ByteArrayObjectDataOutput extends OutputStream implements BufferObjectData
     final InternalSerializationService service;
 
     private final boolean isBigEndian;
+    private Version version = Version.UNKNOWN;
 
     ByteArrayObjectDataOutput(int size, InternalSerializationService service, ByteOrder byteOrder) {
         this.initialSize = size;
@@ -414,6 +416,16 @@ class ByteArrayObjectDataOutput extends OutputStream implements BufferObjectData
         if (buffer != null && buffer.length > initialSize * 8) {
             buffer = new byte[initialSize * 8];
         }
+    }
+
+    @Override
+    public void setVersion(Version version) {
+        this.version = version;
+    }
+
+    @Override
+    public Version getVersion() {
+        return version;
     }
 
     @Override

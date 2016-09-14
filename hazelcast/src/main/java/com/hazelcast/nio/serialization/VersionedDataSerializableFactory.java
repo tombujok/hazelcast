@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package com.hazelcast.internal.serialization;
+package com.hazelcast.nio.serialization;
 
 import com.hazelcast.nio.DataFactory;
 
-public interface DataSerializerHook {
+/**
+ * DataSerializableFactory is used to create IdentifiedDataSerializable instances during de-serialization.
+ *
+ * @see IdentifiedDataSerializable
+ */
+public interface VersionedDataSerializableFactory extends DataFactory {
 
-    int F_ID_OFFSET_WEBMODULE = -1000;
-    int F_ID_OFFSET_HIBERNATE = -2000;
-
-    int getFactoryId();
-
-    DataFactory createFactory();
+    /**
+     * Creates an IdentifiedDataSerializable instance using given type id
+     *
+     * @param typeId  IdentifiedDataSerializable type id
+     * @param version version
+     * @return VersionedIdentifiedDataSerializable instance or null if type id is not known by this factory
+     */
+    Versioned create(int typeId, byte version);
 
 }
-

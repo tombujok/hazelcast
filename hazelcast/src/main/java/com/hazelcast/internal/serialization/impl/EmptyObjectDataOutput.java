@@ -18,6 +18,7 @@ package com.hazelcast.internal.serialization.impl;
 
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
+import com.hazelcast.version.Version;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -135,5 +136,10 @@ final class EmptyObjectDataOutput implements ObjectDataOutput {
     @Override
     public ByteOrder getByteOrder() {
         return ByteOrder.BIG_ENDIAN;
+    }
+
+    @Override
+    public Version getVersion() {
+        return Version.UNKNOWN;
     }
 }
