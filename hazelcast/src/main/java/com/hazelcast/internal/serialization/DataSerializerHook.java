@@ -16,7 +16,7 @@
 
 package com.hazelcast.internal.serialization;
 
-import com.hazelcast.nio.DataFactory;
+import com.hazelcast.nio.serialization.DataSerializableFactory;
 
 public interface DataSerializerHook {
 
@@ -25,7 +25,7 @@ public interface DataSerializerHook {
 
     int getFactoryId();
 
-    DataFactory createFactory();
+    DataSerializableFactory createFactory();
 
 }
 

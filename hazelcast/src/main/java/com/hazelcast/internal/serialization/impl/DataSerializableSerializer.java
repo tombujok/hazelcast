@@ -21,7 +21,6 @@ import com.hazelcast.instance.Node;
 import com.hazelcast.internal.serialization.DataSerializerHook;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ClassLoaderUtil;
-import com.hazelcast.nio.DataFactory;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
@@ -69,7 +68,7 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
             final Iterator<DataSerializerHook> hooks = ServiceLoader.iterator(DataSerializerHook.class, FACTORY_ID, classLoader);
             while (hooks.hasNext()) {
                 DataSerializerHook hook = hooks.next();
-                final DataFactory factory = hook.createFactory();
+                final DataSerializableFactory factory = hook.createFactory();
                 if (factory != null) {
                     register(hook.getFactoryId(), factory);
                 }
@@ -85,7 +84,7 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
         }
     }
 
-    private void register(int factoryId, DataFactory factory) {
+    private void register(int factoryId, DataSerializableFactory factory) {
         final DataSerializableFactory current = factories.get(factoryId);
         if (current != null) {
             if (current.equals(factory)) {

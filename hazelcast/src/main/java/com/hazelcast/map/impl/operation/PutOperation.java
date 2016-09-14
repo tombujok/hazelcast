@@ -17,7 +17,6 @@
 package com.hazelcast.map.impl.operation;
 
 import com.hazelcast.map.impl.MapDataSerializerHook;
-import com.hazelcast.map.impl.MapVersionedDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
@@ -28,6 +27,7 @@ import java.io.IOException;
 
 public class PutOperation extends BasePutOperation implements IdentifiedDataSerializable, Versioned {
 
+    // just an example that a IdentifiedDataSerializable & Versioned object may be included and it will have its own version
     private PutOperation op;
 
     public PutOperation() {
