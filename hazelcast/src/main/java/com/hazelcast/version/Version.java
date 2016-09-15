@@ -73,6 +73,10 @@ public final class Version implements DataSerializable {
         return minor > this.minor || major > this.major;
     }
 
+    public boolean isVersionHigherThan(int major, int minor) {
+        return major < this.major || (minor < this.minor && major == this.major);
+    }
+
     public boolean isVersion(int major, int minor, int patch) {
         return patch == this.patch && minor == this.minor && major == this.major;
     }

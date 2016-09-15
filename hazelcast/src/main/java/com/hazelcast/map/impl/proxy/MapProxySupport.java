@@ -501,6 +501,38 @@ abstract class MapProxySupport extends AbstractDistributedObject<MapService> imp
     }
 
     /**
+     * The difference is that this method knows if it has triggered the load or not.
+     * If it hasn't triggered the load if will not wait for the load to finish and return false;
+     *
+     * @param replaceExistingValues
+     * @return
+     */
+    protected Boolean tryLoadAllInternal(boolean replaceExistingValues) {
+        int mapNamePartition = partitionService.getPartitionId(name);
+
+        Operation operation = operationProvider.createLoadMapOperation(name, replaceExistingValues);
+        Future loadMapFuture = operationService.invokeOnPartition(SERVICE_NAME, operation, mapNamePartition);
+        Boolean triggered;
+
+        try {
+            triggered = (Boolean) loadMapFuture.get();
+            if (triggered) {
+                waitUntilLoaded();
+            }
+            return triggered;
+
+        } catch (Throwable t) {
+            throw rethrow(t);
+        } finally {
+            if (replaceExistingValues) {
+                sendClientNearCacheClearEvent();
+                runOnLiteMembers(new ClearOperation(name));
+            }
+        }
+    }
+
+
+    /**
      * Maps keys to corresponding partitions and sends operations to them.
      */
     protected void loadInternal(Iterable<Data> dataKeys, boolean replaceExistingValues) {

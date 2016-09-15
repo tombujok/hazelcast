@@ -24,24 +24,26 @@ import com.hazelcast.spi.OperationFactory;
 import java.io.IOException;
 
 /**
- *    Factory for {@link LoadStatusOperation}
+ * Factory for {@link LoadStatusOperation}
  **/
-public class LoadStatusOperationFactory implements OperationFactory  {
+public class LoadStatusOperationFactory implements OperationFactory {
 
     private Throwable exception;
     private String name;
+    private String message;
 
     public LoadStatusOperationFactory() {
     }
 
-    public LoadStatusOperationFactory(String name, Throwable exception) {
+    public LoadStatusOperationFactory(String name, Throwable exception, String message) {
         this.name = name;
         this.exception = exception;
+        this.message = message;
     }
 
     @Override
     public Operation createOperation() {
-        return new LoadStatusOperation(name, exception);
+        return new LoadStatusOperation(name, exception, message);
     }
 
     @Override

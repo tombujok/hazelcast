@@ -56,6 +56,7 @@ import com.hazelcast.util.CollectionUtil;
 import com.hazelcast.util.IterationType;
 import com.hazelcast.util.MapUtil;
 import com.hazelcast.util.executor.DelegatingFuture;
+import com.hazelcast.version.Version;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -561,6 +562,17 @@ public class MapProxyImpl<K, V> extends MapProxySupport implements IMap<K, V>, I
         checkTrue(isMapStoreEnabled(), "First you should configure a map store");
 
         loadAllInternal(replaceExistingValues);
+    }
+
+    @Override
+    public boolean tryLoadAll(boolean replaceExistingValues) {
+        Version clusterVersion = getNodeEngine().getClusterService().getClusterVersion();
+        if (clusterVersion.isVersionHigherThan(3, 8)) {
+            checkTrue(isMapStoreEnabled(), "First you should configure a map store");
+            return tryLoadAllInternal(replaceExistingValues);
+        } else {
+            throw new IllegalStateException("Feature not available in version " + clusterVersion);
+        }
     }
 
     @Override

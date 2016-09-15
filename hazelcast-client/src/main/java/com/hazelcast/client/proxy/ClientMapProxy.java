@@ -975,6 +975,11 @@ public class ClientMapProxy<K, V>
     }
 
     @Override
+    public boolean tryLoadAll(boolean replaceExistingValues) {
+        return false;
+    }
+
+    @Override
     public void loadAll(Set<K> keys, boolean replaceExistingValues) {
         checkNotNull(keys, "Parameter keys should not be null.");
         if (keys.isEmpty()) {

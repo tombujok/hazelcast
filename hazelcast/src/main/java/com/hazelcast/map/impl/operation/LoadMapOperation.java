@@ -30,6 +30,7 @@ import java.io.IOException;
 public class LoadMapOperation extends MapOperation implements Versioned, IdentifiedDataSerializable {
 
     private boolean replaceExistingValues;
+    private transient boolean loadingTriggered = true;
 
     public LoadMapOperation() {
     }
@@ -41,7 +42,21 @@ public class LoadMapOperation extends MapOperation implements Versioned, Identif
 
     @Override
     public void run() throws Exception {
-        recordStore.loadAll(replaceExistingValues);
+        if (recordStore.isLoaded()) {
+            recordStore.loadAll(replaceExistingValues);
+            loadingTriggered = true;
+        } else {
+            loadingTriggered = false;
+        }
+    }
+
+    @Override
+    public Boolean getResponse() {
+        if (getClusterVersion().isVersionLowerThan(3, 9)) {
+            return null;
+        } else {
+            return loadingTriggered;
+        }
     }
 
     @Override

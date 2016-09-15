@@ -244,6 +244,17 @@ public interface IMap<K, V> extends ConcurrentMap<K, V>, LegacyAsyncMap<K, V> {
     void loadAll(boolean replaceExistingValues);
 
     /**
+     * Loads all keys into the store. This is a batch load operation so that an implementation can
+     * optimize the multiple loads.
+     *
+     * @param replaceExistingValues when <code>true</code>, existing values in the Map will
+     *                              be replaced by those loaded from the MapLoader
+     *                              void loadAll(boolean replaceExistingValues));
+     * @since 3.3
+     */
+    boolean tryLoadAll(boolean replaceExistingValues);
+
+    /**
      * Loads the given keys. This is a batch load operation so that an implementation can
      * optimize the multiple loads.
      *

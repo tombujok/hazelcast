@@ -345,18 +345,26 @@ public class MapKeyLoader {
 
     private void sendLoadCompleted(int clusterSize, Throwable exception) throws Exception {
 
+        // just a dummy example of some conditional logic;
+        String loadCompletedMessage;
+        if (clusterService.getClusterVersion().isVersionLowerThan(3, 9)) {
+            loadCompletedMessage = null;
+        } else {
+            loadCompletedMessage = "Load completed " + clusterSize + " ";
+        }
+
         // notify all partitions about loading status: finished or exception encountered
-        opService.invokeOnAllPartitions(SERVICE_NAME, new LoadStatusOperationFactory(mapName, exception));
+        opService.invokeOnAllPartitions(SERVICE_NAME, new LoadStatusOperationFactory(mapName, exception, loadCompletedMessage));
 
         // notify SENDER_BACKUP
         if (hasBackup && clusterSize > 1) {
-            Operation op = new LoadStatusOperation(mapName, exception);
+            Operation op = new LoadStatusOperation(mapName, exception, loadCompletedMessage);
             opService.createInvocationBuilder(SERVICE_NAME, op, mapNamePartition).setReplicaIndex(1).invoke();
         }
     }
 
     private void sendLoadCompleted(Throwable t) {
-        Operation op = new LoadStatusOperation(mapName, t);
+        Operation op = new LoadStatusOperation(mapName, t, null);
         // This updates the local record store on the partition thread.
         // If invoked by the SENDER_BACKUP however it's the replica index has to be set to 1, otherwise
         // it will be a remote call to the SENDER who is the owner of the given partitionId.

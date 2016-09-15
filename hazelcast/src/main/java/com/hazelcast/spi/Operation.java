@@ -28,6 +28,7 @@ import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.quorum.QuorumException;
 import com.hazelcast.spi.exception.RetryableException;
 import com.hazelcast.spi.properties.GroupProperty;
+import com.hazelcast.version.Version;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
@@ -128,13 +129,13 @@ public abstract class Operation implements DataSerializable {
 
     /**
      * Returns the id of the partition that this Operation will be executed upon.
-     *
+     * <p>
      * If the partitionId is equal or larger than 0, it means that it is tied to a specific partition: for example,
      * a map.get('foo'). If it is smaller than 0, than it means that it isn't bound to a particular partition.
-     *
+     * <p>
      * The partitionId should never be equal or larger than the total number of partitions. For example, if there are 271
      * partitions, the maximum partitionId is 270.
-     *
+     * <p>
      * The partitionId is used by the OperationService to figure out which member owns a specific partition, and to send
      * the operation to that member.
      *
@@ -175,7 +176,7 @@ public abstract class Operation implements DataSerializable {
 
     /**
      * Gets the callId of this Operation.
-     *
+     * <p>
      * The callId is used to associate the invocation of an Operation on a remote system, with the response from the execution
      * of that operation.
      *
@@ -286,7 +287,7 @@ public abstract class Operation implements DataSerializable {
 
     /**
      * Gets the time in milliseconds since this invocation started.
-     *
+     * <p>
      * For more information, see {@link ClusterClock#getClusterTime()}.
      *
      * @return the time of the invocation start.
@@ -305,7 +306,7 @@ public abstract class Operation implements DataSerializable {
      * Gets the call timeout in milliseconds. For example, if a call should start execution within 60 seconds otherwise
      * it should be aborted, then the call-timeout is 60000 milliseconds. Once an operation starts execution and runs for a
      * long period (e.g. 5 minutes with an IExecutorService execute operation), then the call timeout isn't relevant any longer.
-     *
+     * <p>
      * For more information about the default value, see
      * {@link GroupProperty#OPERATION_CALL_TIMEOUT_MILLIS}
      *
@@ -519,11 +520,15 @@ public abstract class Operation implements DataSerializable {
     protected void readInternal(ObjectDataInput in) throws IOException {
     }
 
+    protected Version getClusterVersion() {
+        return nodeEngine.getClusterService().getClusterVersion();
+    }
+
     /**
      * A template method allows for additional information to be passed into the {@link #toString()} method. So an Operation
      * subclass can override this method and add additional debugging content. The default implementation does nothing so
      * one is not forced to provide an empty implementation.
-     *
+     * <p>
      * It is a good practice always to call the super.toString(stringBuffer) when implementing this method to make sure
      * that the super class can inject content if needed.
      *

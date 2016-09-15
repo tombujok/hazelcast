@@ -44,6 +44,7 @@ public class MapLoaderMultiNodeTest extends HazelcastTestSupport {
 
     @Test(timeout = MINUTE)
     public void testLoads_whenMapLazyAndCheckingSize() throws Exception {
+        setLoggingLog4j();;
         Config cfg = newConfig(mapName, LAZY);
 
         IMap<Object, Object> map = getMap(mapName, cfg);

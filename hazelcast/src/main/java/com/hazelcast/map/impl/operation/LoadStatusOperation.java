@@ -20,6 +20,7 @@ import com.hazelcast.map.impl.MapDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.Versioned;
 import com.hazelcast.spi.PartitionAwareOperation;
 import com.hazelcast.spi.impl.MutatingOperation;
 
@@ -28,33 +29,49 @@ import java.io.IOException;
 /**
  * Notifies RecordStores about completion of loading
  **/
-public class LoadStatusOperation extends MapOperation implements PartitionAwareOperation, MutatingOperation, IdentifiedDataSerializable {
+public class LoadStatusOperation extends MapOperation implements PartitionAwareOperation, MutatingOperation, IdentifiedDataSerializable, Versioned {
 
     private Throwable exception;
+    private String message;
 
     public LoadStatusOperation() {
     }
 
-    public LoadStatusOperation(String name, Throwable exception) {
+    public LoadStatusOperation(String name, Throwable exception, String message) {
         super(name);
         this.exception = exception;
+        this.message = message;
     }
 
     @Override
     public void run() throws Exception {
-        recordStore.updateLoadStatus(true, exception);
+        if (message == null) {
+            System.err.println("Invoking LoadStatusOperation without message");
+            recordStore.updateLoadStatus(true, exception);
+        } else {
+            // some conditional logic may be done here.
+            System.err.println("Invoking LoadStatusOperation with message='" + message + "'");
+            recordStore.updateLoadStatus(true, exception);
+        }
     }
 
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {
         super.writeInternal(out);
         out.writeObject(exception);
+        if (getClusterVersion().isVersionHigherThan(3, 8)) {
+            out.writeUTF(message);
+        }
     }
 
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
         exception = in.readObject();
+        if (getClusterVersion().isVersionHigherThan(3, 8)) {
+            message = in.readUTF();
+        }
+
     }
 
     @Override
