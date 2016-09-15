@@ -22,6 +22,7 @@ import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.spi.OperationFactory;
+import com.hazelcast.version.Version;
 
 import java.util.List;
 import java.util.Set;
@@ -59,9 +60,9 @@ public class WANAwareOperationProvider extends MapOperationProviderDelegator {
     }
 
     @Override
-    public MapOperation createSetOperation(String name, Data dataKey, Data value, long ttl) {
+    public MapOperation createSetOperation(String name, Data dataKey, Data value, long ttl, Version version) {
         checkWanReplicationQueues(name);
-        return getDelegate().createSetOperation(name, dataKey, value, ttl);
+        return getDelegate().createSetOperation(name, dataKey, value, ttl, version);
     }
 
     @Override

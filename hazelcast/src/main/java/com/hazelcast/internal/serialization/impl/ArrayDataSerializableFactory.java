@@ -16,11 +16,13 @@
 
 package com.hazelcast.internal.serialization.impl;
 
-import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.VersionedDataSerializableFactory;
 import com.hazelcast.util.ConstructorFunction;
+import com.hazelcast.util.VersionAwareConstructorFunction;
+import com.hazelcast.version.Version;
 
-public final class ArrayDataSerializableFactory implements DataSerializableFactory {
+public final class ArrayDataSerializableFactory implements VersionedDataSerializableFactory {
 
     private final ConstructorFunction<Integer, IdentifiedDataSerializable>[] constructors;
     private final int len;
@@ -40,6 +42,20 @@ public final class ArrayDataSerializableFactory implements DataSerializableFacto
         if (typeId >= 0 && typeId < len) {
             ConstructorFunction<Integer, IdentifiedDataSerializable> factory = constructors[typeId];
             return factory != null ? factory.createNew(typeId) : null;
+        }
+        return null;
+    }
+
+    @Override
+    public IdentifiedDataSerializable create(int typeId, Version version) {
+        if (typeId >= 0 && typeId < len) {
+            ConstructorFunction<Integer, IdentifiedDataSerializable> factory = constructors[typeId];
+            if (factory instanceof VersionAwareConstructorFunction) {
+                return factory != null ? ((VersionAwareConstructorFunction<Integer, IdentifiedDataSerializable>) factory)
+                        .createNew(typeId, version) : null;
+            } else {
+                return factory != null ? factory.createNew(typeId) : null;
+            }
         }
         return null;
     }

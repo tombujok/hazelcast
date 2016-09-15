@@ -23,6 +23,7 @@ import com.hazelcast.map.merge.MapMergePolicy;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.spi.OperationFactory;
+import com.hazelcast.version.Version;
 
 import java.util.List;
 import java.util.Set;
@@ -37,7 +38,7 @@ public interface MapOperationProvider {
 
     MapOperation createTryPutOperation(String name, Data dataKey, Data value, long timeout);
 
-    MapOperation createSetOperation(String name, Data dataKey, Data value, long ttl);
+    MapOperation createSetOperation(String name, Data dataKey, Data value, long ttl, Version version);
 
     MapOperation createPutIfAbsentOperation(String name, Data key, Data value, long ttl);
 

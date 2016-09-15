@@ -26,6 +26,7 @@ import com.hazelcast.map.merge.MapMergePolicy;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.spi.OperationFactory;
+import com.hazelcast.version.Version;
 
 import java.util.List;
 import java.util.Set;
@@ -54,8 +55,12 @@ public class DefaultMapOperationProvider implements MapOperationProvider {
     }
 
     @Override
-    public MapOperation createSetOperation(String name, Data dataKey, Data value, long ttl) {
-        return new SetOperation(name, dataKey, value, ttl);
+    public MapOperation createSetOperation(String name, Data dataKey, Data value, long ttl, Version version) {
+        if (version.isVersionLowerThan(3, 9)) {
+            return new SetOperation(name, dataKey, value, ttl);
+        } else {
+            return new SetOperationOptimised(name, dataKey, value, ttl);
+        }
     }
 
     @Override

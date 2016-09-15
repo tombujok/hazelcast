@@ -40,6 +40,7 @@ public class PutOperation extends BasePutOperation implements IdentifiedDataSeri
 
     @Override
     public void run() {
+        System.err.println("Running PutOperation - (extraField != null) ==" + (op != null));
         dataOldValue = mapServiceContext.toData(recordStore.put(dataKey, dataValue, ttl));
     }
 
@@ -50,7 +51,7 @@ public class PutOperation extends BasePutOperation implements IdentifiedDataSeri
 
     @Override
     public int getFactoryId() {
-        return (short) MapDataSerializerHook.F_ID;
+        return MapDataSerializerHook.F_ID;
     }
 
     @Override

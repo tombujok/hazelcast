@@ -304,19 +304,16 @@ abstract class MapProxySupport extends AbstractDistributedObject<MapService> imp
                 return fromBackup;
             }
         }
-
-        // we're on a 3.9 node, it still has to support 3.8 "legacy" mode
-        if (getClusterVersion().isVersion(3, 8)) {
-            // legacy mode
-            MapOperation operation = operationProvider.createGetOperation(name, key);
-            operation.setThreadId(ThreadUtil.getThreadId());
-            return invokeOperation(key, operation);
+        MapOperation operation;
+        if (getClusterVersion().isVersionLowerThan(3, 9)) {
+            // we're on a 3.9 node, it still has to support 3.8 "legacy" mode
+            operation = operationProvider.createGetOperation(name, key);
         } else {
             // new mode
-            MapOperation operation = operationProvider.createGetOperation39(name, key);
-            operation.setThreadId(ThreadUtil.getThreadId());
-            return invokeOperation(key, operation);
+            operation = operationProvider.createGetOperation39(name, key);
         }
+        operation.setThreadId(ThreadUtil.getThreadId());
+        return invokeOperation(key, operation);
     }
 
     private Version getClusterVersion() {
@@ -422,7 +419,8 @@ abstract class MapProxySupport extends AbstractDistributedObject<MapService> imp
 
     protected ICompletableFuture<Data> setAsyncInternal(Data key, Data value, long ttl, TimeUnit timeunit) {
         int partitionId = getNodeEngine().getPartitionService().getPartitionId(key);
-        MapOperation operation = operationProvider.createSetOperation(name, key, value, getTimeInMillis(ttl, timeunit));
+        MapOperation operation = operationProvider.createSetOperation(name, key, value, getTimeInMillis(ttl, timeunit),
+                getClusterVersion());
         operation.setThreadId(ThreadUtil.getThreadId());
         try {
             return operationService.invokeOnPartition(SERVICE_NAME, operation, partitionId);
@@ -444,7 +442,8 @@ abstract class MapProxySupport extends AbstractDistributedObject<MapService> imp
     //warning: When UpdateEvent is fired it does *NOT* contain oldValue.
     //see this: https://github.com/hazelcast/hazelcast/pull/6088#issuecomment-136025968
     protected void setInternal(Data key, Data value, long ttl, TimeUnit timeunit) {
-        MapOperation operation = operationProvider.createSetOperation(name, key, value, timeunit.toMillis(ttl));
+        MapOperation operation = operationProvider.createSetOperation(name, key, value, timeunit.toMillis(ttl),
+                getClusterVersion());
         invokeOperation(key, operation);
     }
 

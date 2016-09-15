@@ -29,6 +29,7 @@ import com.hazelcast.nio.serialization.HazelcastSerializationException;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.nio.serialization.StreamSerializer;
 import com.hazelcast.nio.serialization.Versioned;
+import com.hazelcast.nio.serialization.VersionedDataSerializableFactory;
 import com.hazelcast.util.ExceptionUtil;
 import com.hazelcast.util.ServiceLoader;
 import com.hazelcast.util.collection.Int2ObjectHashMap;
@@ -130,11 +131,7 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
                     throw new HazelcastSerializationException("No DataSerializerFactory registered for namespace: " + factoryId);
                 }
                 id = in.readInt();
-                ds = dsf.create(id);
-                if (ds == null) {
-                    throw new HazelcastSerializationException(dsf
-                            + " is not be able to create an instance for id: " + id + " on factoryId: " + factoryId);
-                }
+
                 // TODO: @mm - we can check if DS class is final.
 
                 if (identified == 2) {
@@ -143,9 +140,22 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
                     Version v = node.getClusterService().getClusterVersion();
                     Version objectVersion = Version.of(v.getMajor(), version, v.getPatch());
 
+                    if (dsf instanceof VersionedDataSerializableFactory) {
+                        ds = ((VersionedDataSerializableFactory) dsf).create(id, objectVersion);
+                    } else {
+                        ds = dsf.create(id);
+                    }
+
                     setVersion(in, objectVersion);
                 } else {
+                    // unversioned but identified
+                    ds = dsf.create(id);
                     setVersion(in, Version.UNKNOWN);
+                }
+
+                if (ds == null) {
+                    throw new HazelcastSerializationException(dsf
+                            + " is not be able to create an instance for id: " + id + " on factoryId: " + factoryId);
                 }
 
                 ds.readData(in);

@@ -37,7 +37,7 @@ public class MapSetMessageTask
     protected Operation prepareOperation() {
         MapOperationProvider operationProvider = getMapOperationProvider(parameters.name);
         MapOperation op = operationProvider.createSetOperation(parameters.name, parameters.key,
-                parameters.value, parameters.ttl);
+                parameters.value, parameters.ttl, getClusterVersion());
         op.setThreadId(parameters.threadId);
         return op;
     }

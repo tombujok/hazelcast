@@ -17,22 +17,28 @@
 package com.hazelcast.map.impl.operation;
 
 import com.hazelcast.map.impl.MapDataSerializerHook;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.nio.serialization.Versioned;
 
+import java.io.IOException;
+
 import static com.hazelcast.core.EntryEventType.ADDED;
 import static com.hazelcast.core.EntryEventType.UPDATED;
 
-public class SetOperation extends BasePutOperation implements IdentifiedDataSerializable, Versioned {
+public class SetOperationOptimised extends BasePutOperation implements IdentifiedDataSerializable, Versioned {
 
     private boolean newRecord;
+    private boolean enableSuperOptimisationTrickery;
 
-    public SetOperation() {
+    public SetOperationOptimised() {
     }
 
-    public SetOperation(String name, Data dataKey, Data value, long ttl) {
+    public SetOperationOptimised(String name, Data dataKey, Data value, long ttl) {
         super(name, dataKey, value, ttl);
+        this.enableSuperOptimisationTrickery = true;
     }
 
     @Override
@@ -44,7 +50,7 @@ public class SetOperation extends BasePutOperation implements IdentifiedDataSeri
 
     @Override
     public void run() {
-        System.err.println("Running OLD set operation");
+        System.err.println("Running NEW set operation enableSuperOptimisationTrickery = " + enableSuperOptimisationTrickery);
         newRecord = recordStore.set(dataKey, dataValue, ttl);
     }
 
@@ -54,11 +60,24 @@ public class SetOperation extends BasePutOperation implements IdentifiedDataSeri
     }
 
     @Override
+    protected void writeInternal(ObjectDataOutput out) throws IOException {
+        super.writeInternal(out);
+        out.writeBoolean(enableSuperOptimisationTrickery);
+    }
+
+    @Override
+    protected void readInternal(ObjectDataInput in) throws IOException {
+        super.readInternal(in);
+        enableSuperOptimisationTrickery = in.readBoolean();
+    }
+
+    @Override
     public int getFactoryId() {
         return MapDataSerializerHook.F_ID;
     }
 
     @Override
+    // it shares the same ID with he SetOperation
     public int getId() {
         return MapDataSerializerHook.SET;
     }
