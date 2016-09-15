@@ -52,7 +52,14 @@ public class MapGetMessageTask
     @Override
     protected Operation prepareOperation() {
         MapOperationProvider operationProvider = getMapOperationProvider(parameters.name);
-        MapOperation operation = operationProvider.createGetOperation(parameters.name, parameters.key);
+        MapOperation operation;
+        if (getClusterVersion().isVersionLowerThan(3, 9)) {
+            // we're on a 3.9 node, it still has to support 3.8 "legacy" mode
+            operation = operationProvider.createGetOperation(parameters.name, parameters.key);
+        } else {
+            // new mode
+            operation = operationProvider.createGetOperation39(parameters.name, parameters.key);
+        }
         operation.setThreadId(parameters.threadId);
         return operation;
     }

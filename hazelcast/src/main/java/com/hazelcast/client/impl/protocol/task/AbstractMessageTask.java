@@ -33,6 +33,7 @@ import com.hazelcast.security.SecurityContext;
 import com.hazelcast.spi.exception.RetryableHazelcastException;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.util.ExceptionUtil;
+import com.hazelcast.version.Version;
 
 import java.security.Permission;
 import java.util.logging.Level;
@@ -80,6 +81,10 @@ public abstract class AbstractMessageTask<P>
     protected abstract P decodeClientMessage(ClientMessage clientMessage);
 
     protected abstract ClientMessage encodeResponse(Object response);
+
+    protected Version getClusterVersion() {
+        return node.getClusterService().getClusterVersion();
+    }
 
     @Override
     public int getPartitionId() {
