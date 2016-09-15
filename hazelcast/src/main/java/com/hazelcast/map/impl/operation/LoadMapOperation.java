@@ -16,15 +16,18 @@
 
 package com.hazelcast.map.impl.operation;
 
+import com.hazelcast.map.impl.MapDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.Versioned;
 
 import java.io.IOException;
 
 /**
  * Triggers map loading from a map store
  */
-public class LoadMapOperation extends MapOperation {
+public class LoadMapOperation extends MapOperation implements Versioned, IdentifiedDataSerializable {
 
     private boolean replaceExistingValues;
 
@@ -51,5 +54,15 @@ public class LoadMapOperation extends MapOperation {
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
         replaceExistingValues = in.readBoolean();
+    }
+
+    @Override
+    public int getFactoryId() {
+        return MapDataSerializerHook.F_ID;
+    }
+
+    @Override
+    public int getId() {
+        return MapDataSerializerHook.LOAD_MAP;
     }
 }
