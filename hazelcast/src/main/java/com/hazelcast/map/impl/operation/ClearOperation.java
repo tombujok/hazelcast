@@ -17,30 +17,40 @@
 package com.hazelcast.map.impl.operation;
 
 import com.hazelcast.core.EntryEventType;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.Versioned;
 import com.hazelcast.spi.BackupAwareOperation;
 import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.PartitionAwareOperation;
 import com.hazelcast.spi.impl.MutatingOperation;
 
+import java.io.IOException;
+
 import static com.hazelcast.map.impl.MapService.SERVICE_NAME;
 
 public class ClearOperation extends MapOperation implements BackupAwareOperation,
-        PartitionAwareOperation, MutatingOperation {
+        PartitionAwareOperation, MutatingOperation, Versioned {
+
+    // just an example that a DataSerializable & Versioned object may be included and it will have its own version
+    private ClearBackupOperation op;
 
     private boolean shouldBackup;
     private int numberOfClearedEntries;
 
     public ClearOperation() {
-        this(null);
     }
 
     public ClearOperation(String name) {
         super(name);
         createRecordStoreOnDemand = false;
+        this.op = new ClearBackupOperation();
     }
 
     @Override
     public void run() {
+        System.err.println("Running ClearOperation - (extraField != null) ==" + (op != null));
+
         // near-cache clear will be called multiple times by each clear operation,
         // but it's still preferred to send a separate operation to clear near-cache.
         clearLocalNearCache();
@@ -89,4 +99,22 @@ public class ClearOperation extends MapOperation implements BackupAwareOperation
         clearBackupOperation.setServiceName(SERVICE_NAME);
         return clearBackupOperation;
     }
+
+    @Override
+    public void readInternal(ObjectDataInput in) throws IOException {
+        super.readInternal(in);
+        if (in.getVersion().isVersion(3, 9)) {
+            op = in.readObject();
+        }
+    }
+
+    @Override
+    protected void writeInternal(ObjectDataOutput out) throws IOException {
+        super.writeInternal(out);
+        if (out.getVersion().isVersion(3, 9)) {
+            out.writeObject(op);
+        }
+    }
+
+
 }

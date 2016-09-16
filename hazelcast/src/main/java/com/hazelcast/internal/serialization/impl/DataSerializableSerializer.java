@@ -117,9 +117,16 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
         int factoryId = 0;
         String className = null;
         try {
-            if (identified == 0) {
+            if (identified == 0 || identified == 3) {
                 className = in.readUTF();
                 ds = ClassLoaderUtil.newInstance(in.getClassLoader(), className);
+
+                if (identified == 3) {
+                    byte version = in.readByte();
+                    Version v = node.getClusterService().getClusterVersion();
+                    Version objectVersion = Version.of(v.getMajor(), version, v.getPatch());
+                    setVersion(in, objectVersion);
+                }
 
                 ds.readData(in);
             } else {
@@ -215,11 +222,17 @@ final class DataSerializableSerializer implements StreamSerializer<DataSerializa
             } else {
                 identified = 1;
             }
+        } else if (obj instanceof Versioned) {
+            identified = 3;
         }
 
+
         out.writeByte(identified);
-        if (identified == 0) {
+        if (identified == 0 || identified == 3) {
             out.writeUTF(obj.getClass().getName());
+            if (identified == 3) {
+                out.writeByte(version.getMinor());
+            }
         } else if (identified == 1 || identified == 2) {
             final IdentifiedDataSerializable ds = (IdentifiedDataSerializable) obj;
             out.writeInt(ds.getFactoryId());
