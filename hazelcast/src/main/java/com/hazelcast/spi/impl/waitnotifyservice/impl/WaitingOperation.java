@@ -17,12 +17,14 @@
 package com.hazelcast.spi.impl.waitnotifyservice.impl;
 
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.spi.BlockingOperation;
 import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.OperationResponseHandler;
 import com.hazelcast.spi.PartitionAwareOperation;
 import com.hazelcast.spi.exception.RetryableException;
 import com.hazelcast.spi.impl.NodeEngineImpl;
+import com.hazelcast.spi.impl.SpiDataSerializerHook;
 import com.hazelcast.spi.impl.operationservice.InternalOperationService;
 import com.hazelcast.spi.impl.operationservice.impl.responses.CallTimeoutResponse;
 import com.hazelcast.util.Clock;
@@ -34,15 +36,18 @@ import java.util.logging.Level;
 
 import static com.hazelcast.util.EmptyStatement.ignore;
 
-class WaitingOperation extends Operation implements Delayed, PartitionAwareOperation {
-    final Queue<WaitingOperation> queue;
-    final Operation op;
-    final BlockingOperation blockingOperation;
-    final long expirationTime;
+public class WaitingOperation extends Operation implements Delayed, PartitionAwareOperation, IdentifiedDataSerializable {
+    Queue<WaitingOperation> queue;
+    Operation op;
+    BlockingOperation blockingOperation;
+    long expirationTime;
     volatile boolean valid = true;
     volatile Object cancelResponse;
 
-    WaitingOperation(Queue<WaitingOperation> queue, BlockingOperation blockingOperation) {
+    public WaitingOperation() {
+    }
+
+    public WaitingOperation(Queue<WaitingOperation> queue, BlockingOperation blockingOperation) {
         this.op = (Operation) blockingOperation;
         this.blockingOperation = blockingOperation;
         this.queue = queue;
@@ -198,5 +203,15 @@ class WaitingOperation extends Operation implements Delayed, PartitionAwareOpera
         sb.append(", op=").append(op);
         sb.append(", expirationTime=").append(expirationTime);
         sb.append(", valid=").append(valid);
+    }
+
+    @Override
+    public int getFactoryId() {
+        return SpiDataSerializerHook.F_ID;
+    }
+
+    @Override
+    public int getId() {
+        return SpiDataSerializerHook.WAITING;
     }
 }
