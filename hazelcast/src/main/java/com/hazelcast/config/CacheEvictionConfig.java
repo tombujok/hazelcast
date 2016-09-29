@@ -16,6 +16,7 @@
 
 package com.hazelcast.config;
 
+import com.hazelcast.client.ClientProtocol;
 import com.hazelcast.internal.eviction.EvictionPolicyComparator;
 
 import static com.hazelcast.util.Preconditions.checkNotNull;
@@ -24,9 +25,9 @@ import static com.hazelcast.util.Preconditions.checkNotNull;
  * Configuration for cache eviction.
  *
  * @see com.hazelcast.config.EvictionConfig
- *
  * @deprecated Use {@link com.hazelcast.config.EvictionConfig} instead of this
  */
+@ClientProtocol
 @Deprecated
 public class CacheEvictionConfig
         extends EvictionConfig {
@@ -139,7 +140,6 @@ public class CacheEvictionConfig
      *
      * @return the {@link com.hazelcast.config.EvictionConfig.MaxSizePolicy} as
      * {@link com.hazelcast.config.CacheEvictionConfig.CacheMaxSizePolicy}
-     *
      * @deprecated Use {@link com.hazelcast.config.EvictionConfig#getMaximumSizePolicy()} instead of this
      */
     public CacheMaxSizePolicy getMaxSizePolicy() {
@@ -153,7 +153,6 @@ public class CacheEvictionConfig
      * @param cacheMaxSizePolicy {@link com.hazelcast.config.CacheEvictionConfig.CacheMaxSizePolicy} to be converted
      *                           and set as {@link com.hazelcast.config.EvictionConfig.MaxSizePolicy}
      * @return this {@link com.hazelcast.config.CacheEvictionConfig}
-     *
      * @deprecated Use {@link com.hazelcast.config.EvictionConfig#setMaximumSizePolicy(MaxSizePolicy)} instead of this
      */
     public CacheEvictionConfig setMaxSizePolicy(CacheMaxSizePolicy cacheMaxSizePolicy) {
