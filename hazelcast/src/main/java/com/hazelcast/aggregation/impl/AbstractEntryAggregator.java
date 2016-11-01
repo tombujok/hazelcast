@@ -22,7 +22,7 @@ import com.hazelcast.query.impl.Extractable;
 import java.io.Serializable;
 import java.util.Map;
 
-public abstract class AbstractEntryAggregator<K, V, R> implements EntryAggregator<K, V, R>, Serializable {
+public abstract class AbstractEntryAggregator<R, K, V> implements EntryAggregator<R, K, V>, Serializable {
 
     private String attributePath;
 

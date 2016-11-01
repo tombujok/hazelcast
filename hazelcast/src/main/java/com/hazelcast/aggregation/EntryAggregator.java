@@ -32,7 +32,7 @@ import java.util.Map;
  * @param <K> entry key type
  * @param <V> entry value type
  */
-public interface EntryAggregator<K, V, R> extends Serializable {
+public interface EntryAggregator<R, K, V> extends Serializable {
 
     /**
      * Accumulates t

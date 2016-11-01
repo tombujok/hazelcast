@@ -2,7 +2,6 @@ package com.hazelcast.map;
 
 import com.hazelcast.aggregation.EntryAggregator;
 import com.hazelcast.config.Config;
-import com.hazelcast.config.ExecutorConfig;
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NetworkConfig;
@@ -16,23 +15,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapWordCount extends HazelcastTestSupport {
 
-    private static final String[] DATA_RESOURCES_TO_LOAD =
-            {"ulysses.txt", "warandpeace.txt", "anna_karenina.txt", "dracula.txt"};
-//                    , "ulysses.txt", "warandpeace.txt", "anna_karenina.txt", "dracula.txt",
-//                    "ulysses.txt", "warandpeace.txt", "anna_karenina.txt", "dracula.txt", "ulysses.txt", "warandpeace.txt", "anna_karenina.txt", "dracula.txt"};
+    private static final String[] DATA_RESOURCES_TO_LOAD = {"dracula.txt"};
 
     private static final String MAP_NAME = "articles";
 
@@ -45,19 +37,19 @@ public class MapWordCount extends HazelcastTestSupport {
         try {
             // Read data
             System.out.println("Filling map...");
-            for (int i = 0; i < 100; i++) {
-                fillMapWithDataEachLineNewEntry(hazelcastInstance);
-//                fillMapWithData(hazelcastInstance);
+            for (int i = 0; i < 20 * 8; i++) {
+//                fillMapWithDataEachLineNewEntry(hazelcastInstance);
+                fillMapWithData(hazelcastInstance);
             }
             IMap<String, String> map = hazelcastInstance.getMap(MAP_NAME);
 
 
             System.out.println("Garbage collecting...");
-            for(int i = 0 ; i < 10 ; i++) {
+            for (int i = 0; i < 10; i++) {
                 System.gc();
             }
 
-            for(int i = 0 ; i < 10 ; i++) {
+            for (int i = 0; i < 10; i++) {
                 System.out.println("Executing job...");
                 long start = System.currentTimeMillis();
 
@@ -153,15 +145,15 @@ public class MapWordCount extends HazelcastTestSupport {
             while ((line = reader.readLine()) != null) {
                 batch.put(UuidUtil.newSecureUuidString(), line);
                 batchSizeCount++;
-                if(batchSizeCount == batchSize) {
+                if (batchSizeCount == batchSize) {
                     map.putAll(batch);
-                    batchSizeCount =0;
+                    batchSizeCount = 0;
                     batch.clear();
 
                 }
             }
 
-            if(batchSizeCount > 0) {
+            if (batchSizeCount > 0) {
                 map.putAll(batch);
                 batch.clear();
             }
