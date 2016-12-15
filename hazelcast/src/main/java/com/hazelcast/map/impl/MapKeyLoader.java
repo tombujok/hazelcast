@@ -34,6 +34,7 @@ import com.hazelcast.spi.ExecutionService;
 import com.hazelcast.spi.InternalCompletableFuture;
 import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.OperationService;
+import com.hazelcast.spi.exception.RetryableHazelcastException;
 import com.hazelcast.spi.impl.AbstractCompletableFuture;
 import com.hazelcast.spi.partition.IPartition;
 import com.hazelcast.spi.partition.IPartitionService;
@@ -227,7 +228,7 @@ public class MapKeyLoader {
         role.nextOrStay(Role.SENDER);
 
         if (state.is(State.LOADING)) {
-            return loadFinished;
+            throw new RetryableHazelcastException("The KeyLoader is already in loading state " + getStateMessage());
         }
         state.next(State.LOADING);
 
