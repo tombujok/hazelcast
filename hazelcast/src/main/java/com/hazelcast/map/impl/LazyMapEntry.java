@@ -17,8 +17,11 @@
 package com.hazelcast.map.impl;
 
 import com.hazelcast.internal.serialization.InternalSerializationService;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.nio.serialization.impl.BinaryInterface;
 import com.hazelcast.query.impl.CachedQueryEntry;
 import com.hazelcast.query.impl.getters.Extractors;
 
@@ -42,9 +45,8 @@ import java.util.Map;
  *
  * @see com.hazelcast.map.impl.operation.EntryOperation#createMapEntry(Data, Object)
  */
-
+@BinaryInterface
 public class LazyMapEntry extends CachedQueryEntry implements Serializable, IdentifiedDataSerializable {
-    private static final long serialVersionUID = 0L;
 
     private transient boolean modified;
 
@@ -67,7 +69,6 @@ public class LazyMapEntry extends CachedQueryEntry implements Serializable, Iden
         this.valueData = null;
         return oldValue;
     }
-
 
     /**
      * Similar to calling {@link #setValue} with null but doesn't return old-value hence no extra deserialization.
@@ -117,6 +118,18 @@ public class LazyMapEntry extends CachedQueryEntry implements Serializable, Iden
         s.defaultWriteObject();
         s.writeObject(getKey());
         s.writeObject(getValue());
+    }
+
+    @Override
+    public void readData(ObjectDataInput in) throws IOException {
+        keyObject = in.readObject();
+        valueObject = in.readObject();
+    }
+
+    @Override
+    public void writeData(ObjectDataOutput out) throws IOException {
+        out.writeObject(getKey());
+        out.writeObject(getValue());
     }
 
     @Override

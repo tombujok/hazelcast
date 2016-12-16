@@ -45,7 +45,17 @@ public class LazyMapEntryTest extends HazelcastTestSupport {
     private InternalSerializationService serializationService = new DefaultSerializationServiceBuilder().build();
 
     @Test
-    public void testSerialization() throws IOException, ClassNotFoundException {
+    public void testIdentifiedSerialization() throws IOException, ClassNotFoundException {
+        Data keyData = serializationService.toData("keyData");
+        Data valueData = serializationService.toData("valueData");
+        entry.init(serializationService, keyData, valueData, null);
+        LazyMapEntry copy = serializationService.toObject(serializationService.toData(entry));
+
+        assertEquals(entry, copy);
+    }
+
+    @Test
+    public void testJavaSerialization() throws IOException, ClassNotFoundException {
         Data keyData = serializationService.toData("keyData");
         Data valueData = serializationService.toData("valueData");
         entry.init(serializationService, keyData, valueData, null);
