@@ -13,6 +13,7 @@ import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.TestHazelcastInstanceFactory;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
+import com.hazelcast.test.annotation.Repeat;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -114,6 +115,7 @@ public class MapLoaderMultiNodeTest extends HazelcastTestSupport {
     }
 
     @Test(timeout = MINUTE)
+    @Repeat(10000)
     public void testLoadAgain_whenLoadedAllCalledMultipleTimes() throws Exception {
         Config cfg = newConfig(mapName, LAZY);
 
