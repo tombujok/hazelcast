@@ -22,6 +22,7 @@ import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.TestHazelcastInstanceFactory;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
+import com.hazelcast.test.annotation.Repeat;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -197,6 +198,7 @@ public class MapLoaderTest extends HazelcastTestSupport {
     }
 
     @Test(timeout = MINUTE)
+    @Repeat(10000)
     public void testMapCanBeLoaded_whenLoadAllKeysThrowsExceptionFirstTime() throws InterruptedException {
         Config config = getConfig();
         MapLoader failingMapLoader = new FailingMapLoader();
