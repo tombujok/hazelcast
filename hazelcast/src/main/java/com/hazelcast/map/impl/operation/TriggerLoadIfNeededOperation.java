@@ -19,38 +19,42 @@ package com.hazelcast.map.impl.operation;
 import com.hazelcast.map.impl.MapDataSerializerHook;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.spi.Operation;
+import com.hazelcast.spi.PartitionAwareOperation;
+import com.hazelcast.spi.ReadonlyOperation;
 
 import java.io.IOException;
 
-public class PartitionCheckIfLoadedOperationFactory extends AbstractMapOperationFactory {
+public class TriggerLoadIfNeededOperation extends MapOperation implements PartitionAwareOperation, ReadonlyOperation {
 
-    private String name;
-
-    public PartitionCheckIfLoadedOperationFactory() {
+    public TriggerLoadIfNeededOperation() {
     }
 
-    public PartitionCheckIfLoadedOperationFactory(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public Operation createOperation() {
-        return new PartitionCheckIfLoadedOperation(name);
+    public TriggerLoadIfNeededOperation(String name) {
+        super(name);
     }
 
     @Override
-    public void writeData(ObjectDataOutput out) throws IOException {
-        out.writeUTF(name);
+    public void run() {
+        recordStore.maybeDoInitialLoad();
+    }
+
+    public boolean returnsResponse() {
+        return false;
     }
 
     @Override
-    public void readData(ObjectDataInput in) throws IOException {
-        name = in.readUTF();
+    protected void writeInternal(ObjectDataOutput out) throws IOException {
+        super.writeInternal(out);
+    }
+
+    @Override
+    protected void readInternal(ObjectDataInput in) throws IOException {
+        super.readInternal(in);
     }
 
     @Override
     public int getId() {
-        return MapDataSerializerHook.CHECK_IF_LOADED_FACTORY;
+        return MapDataSerializerHook.TRIGGER_LOAD_IF_NEEDED;
     }
+
 }

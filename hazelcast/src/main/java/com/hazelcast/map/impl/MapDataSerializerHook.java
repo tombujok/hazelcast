@@ -31,6 +31,9 @@ import com.hazelcast.map.impl.operation.AddIndexOperation;
 import com.hazelcast.map.impl.operation.AddIndexOperationFactory;
 import com.hazelcast.map.impl.operation.AddInterceptorOperation;
 import com.hazelcast.map.impl.operation.AwaitMapFlushOperation;
+import com.hazelcast.map.impl.operation.CheckIfKeyLoadFinishedOperation;
+import com.hazelcast.map.impl.operation.CheckIfPartitionLoadedOperation;
+import com.hazelcast.map.impl.operation.CheckIfPartitionLoadedOperationFactory;
 import com.hazelcast.map.impl.operation.ClearBackupOperation;
 import com.hazelcast.map.impl.operation.ClearNearCacheOperation;
 import com.hazelcast.map.impl.operation.ClearOperation;
@@ -74,8 +77,6 @@ import com.hazelcast.map.impl.operation.MultipleEntryOperationFactory;
 import com.hazelcast.map.impl.operation.MultipleEntryWithPredicateBackupOperation;
 import com.hazelcast.map.impl.operation.MultipleEntryWithPredicateOperation;
 import com.hazelcast.map.impl.operation.NotifyMapFlushOperation;
-import com.hazelcast.map.impl.operation.PartitionCheckIfLoadedOperation;
-import com.hazelcast.map.impl.operation.PartitionCheckIfLoadedOperationFactory;
 import com.hazelcast.map.impl.operation.PartitionWideEntryBackupOperation;
 import com.hazelcast.map.impl.operation.PartitionWideEntryOperation;
 import com.hazelcast.map.impl.operation.PartitionWideEntryOperationFactory;
@@ -100,6 +101,7 @@ import com.hazelcast.map.impl.operation.ReplaceIfSameOperation;
 import com.hazelcast.map.impl.operation.ReplaceOperation;
 import com.hazelcast.map.impl.operation.SetOperation;
 import com.hazelcast.map.impl.operation.SizeOperationFactory;
+import com.hazelcast.map.impl.operation.TriggerLoadIfNeededOperation;
 import com.hazelcast.map.impl.operation.TryPutOperation;
 import com.hazelcast.map.impl.operation.TryRemoveOperation;
 import com.hazelcast.map.impl.operation.WriteBehindStateHolder;
@@ -278,8 +280,10 @@ public final class MapDataSerializerHook implements DataSerializerHook {
     public static final int ACCUMULATOR_CONSUMER = 129;
     public static final int CACHED_QUERY_ENTRY = 130;
     public static final int LAZY_MAP_ENTRY = 131;
+    public static final int TRIGGER_LOAD_IF_NEEDED = 132;
+    public static final int CHECK_IF_KEYLOAD_FINISHED = 133;
 
-    private static final int LEN = LAZY_MAP_ENTRY + 1;
+    private static final int LEN = CHECK_IF_KEYLOAD_FINISHED + 1;
 
     @Override
     public int getFactoryId() {
@@ -472,7 +476,7 @@ public final class MapDataSerializerHook implements DataSerializerHook {
         };
         constructors[CHECK_IF_LOADED] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
             public IdentifiedDataSerializable createNew(Integer arg) {
-                return new PartitionCheckIfLoadedOperation();
+                return new CheckIfPartitionLoadedOperation();
             }
         };
         constructors[PARTITION_WIDE_ENTRY] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
@@ -652,7 +656,7 @@ public final class MapDataSerializerHook implements DataSerializerHook {
         };
         constructors[CHECK_IF_LOADED_FACTORY] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
             public IdentifiedDataSerializable createNew(Integer arg) {
-                return new PartitionCheckIfLoadedOperationFactory();
+                return new CheckIfPartitionLoadedOperationFactory();
             }
         };
         constructors[ADD_INDEX_FACTORY] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
@@ -933,6 +937,16 @@ public final class MapDataSerializerHook implements DataSerializerHook {
         constructors[LAZY_MAP_ENTRY] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
             public IdentifiedDataSerializable createNew(Integer arg) {
                 return new LazyMapEntry();
+            }
+        };
+        constructors[TRIGGER_LOAD_IF_NEEDED] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
+            public IdentifiedDataSerializable createNew(Integer arg) {
+                return new TriggerLoadIfNeededOperation();
+            }
+        };
+        constructors[CHECK_IF_KEYLOAD_FINISHED] = new ConstructorFunction<Integer, IdentifiedDataSerializable>() {
+            public IdentifiedDataSerializable createNew(Integer arg) {
+                return new CheckIfKeyLoadFinishedOperation();
             }
         };
 
