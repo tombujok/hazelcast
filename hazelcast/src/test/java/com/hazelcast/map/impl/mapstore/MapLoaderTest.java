@@ -22,6 +22,7 @@ import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.TestHazelcastInstanceFactory;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
+import com.hazelcast.test.annotation.Repeat;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -55,6 +56,7 @@ import static org.junit.Assert.assertNotNull;
 public class MapLoaderTest extends HazelcastTestSupport {
 
     @Test
+    @Repeat(50)
     public void testSenderAndBackupTerminates_AfterInitialLoad() throws InterruptedException {
         String name = randomString();
         Config config = new Config();
@@ -93,6 +95,7 @@ public class MapLoaderTest extends HazelcastTestSupport {
     }
 
     @Test
+    @Repeat(50)
     public void givenSpecificKeysWereReloaded_whenLoadAllIsCalled_thenAllEntriesAreLoadedFromTheStore() {
         String name = randomString();
         int keysInMapStore = 10000;
@@ -131,6 +134,7 @@ public class MapLoaderTest extends HazelcastTestSupport {
 
     // https://github.com/hazelcast/hazelcast/issues/1770
     @Test
+    @Repeat(50)
     public void test1770() throws InterruptedException {
         Config config = getConfig();
         config.getManagementCenterConfig().setEnabled(true);
@@ -204,6 +208,7 @@ public class MapLoaderTest extends HazelcastTestSupport {
     }
 
     @Test
+    @Repeat(50)
     public void testGetAll_putsLoadedItemsToIMap() throws Exception {
         Integer[] requestedKeys = {1, 2, 3};
         AtomicInteger loadedKeysCounter = new AtomicInteger(0);
@@ -226,6 +231,7 @@ public class MapLoaderTest extends HazelcastTestSupport {
     }
 
     @Test(timeout = MINUTE)
+    @Repeat(50)
     public void testMapCanBeLoaded_whenLoadAllKeysThrowsExceptionFirstTime() throws InterruptedException {
         Config config = getConfig();
         MapLoader failingMapLoader = new FailingMapLoader();

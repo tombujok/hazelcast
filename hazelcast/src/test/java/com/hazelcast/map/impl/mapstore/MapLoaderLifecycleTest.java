@@ -25,6 +25,7 @@ import com.hazelcast.test.HazelcastParallelClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
+import com.hazelcast.test.annotation.Repeat;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,15 +42,18 @@ import static org.mockito.Mockito.withSettings;
 @Category({QuickTest.class, ParallelTest.class})
 public class MapLoaderLifecycleTest extends HazelcastTestSupport {
 
-    private MapLoaderLifecycleSupport loader = mockMapLoaderWithLifecycle();
-    private Config config = new Config();
+    private MapLoaderLifecycleSupport loader;
+    private Config config;
 
     @Before
     public void configure() {
+        loader = mockMapLoaderWithLifecycle();
+        config = new Config();
         config.getMapConfig("map").setMapStoreConfig(new MapStoreConfig().setImplementation(loader));
     }
 
     @Test
+    @Repeat(50)
     public void testInitCalled_whenMapCreated() throws Exception {
 
         HazelcastInstance hz = createHazelcastInstance(config);
@@ -62,6 +66,7 @@ public class MapLoaderLifecycleTest extends HazelcastTestSupport {
     }
 
     @Test
+    @Repeat(50)
     public void testDestroyCalled_whenNodeShutdown() throws Exception {
 
         HazelcastInstance hz = createHazelcastInstance(config);

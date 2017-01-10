@@ -28,6 +28,7 @@ import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.TestHazelcastInstanceFactory;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
+import com.hazelcast.test.annotation.Repeat;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,6 +59,7 @@ public class MapLoaderFailoverTest extends HazelcastTestSupport {
     }
 
     @Test(timeout = MINUTE)
+    @Repeat(50)
     public void testDoesntLoadAgain_whenLoaderNodeGoesDown() throws Exception {
         Config cfg = newConfig("default", LAZY);
         HazelcastInstance[] nodes = nodeFactory.newInstances(cfg, 3);
@@ -77,6 +79,7 @@ public class MapLoaderFailoverTest extends HazelcastTestSupport {
     }
 
     @Test(timeout = MINUTE)
+    @Repeat(50)
     public void testLoads_whenInitialLoaderNodeRemoved() throws Exception {
         Config cfg = newConfig("default", LAZY);
         HazelcastInstance[] nodes = nodeFactory.newInstances(cfg, 3);
@@ -95,6 +98,7 @@ public class MapLoaderFailoverTest extends HazelcastTestSupport {
 
     @Test(timeout = MINUTE)
     // FIXES https://github.com/hazelcast/hazelcast/issues/6056
+    @Repeat(50)
     public void testLoadsAll_whenInitialLoaderNodeRemovedAfterLoading() throws Exception {
         Config cfg = newConfig("default", LAZY);
         HazelcastInstance[] nodes = nodeFactory.newInstances(cfg, 3);
@@ -117,6 +121,7 @@ public class MapLoaderFailoverTest extends HazelcastTestSupport {
     }
 
     @Test(timeout = MINUTE)
+    @Repeat(50)
     public void testLoadsAll_whenInitialLoaderNodeRemovedWhileLoading() throws Exception {
         PausingMapLoader<Integer, Integer> pausingLoader = new PausingMapLoader<Integer, Integer>(mapLoader, 5000);
 
@@ -143,6 +148,7 @@ public class MapLoaderFailoverTest extends HazelcastTestSupport {
     }
 
     @Test(timeout = MINUTE)
+    @Repeat(50)
     // FIXES https://github.com/hazelcast/hazelcast/issues/7959
     public void testLoadsAll_whenInitialLoaderNodeRemovedWhileLoadingAndNoBackups() throws Exception {
         PausingMapLoader<Integer, Integer> pausingLoader = new PausingMapLoader<Integer, Integer>(mapLoader, 5000);
