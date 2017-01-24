@@ -16,6 +16,7 @@ import com.hazelcast.internal.partition.InternalPartitionService;
 import com.hazelcast.map.impl.mapstore.writebehind.TestMapUsingMapStoreBuilder;
 import com.hazelcast.nio.Address;
 import com.hazelcast.query.SqlPredicate;
+import com.hazelcast.spi.properties.GroupProperty;
 import com.hazelcast.test.AssertTask;
 import com.hazelcast.test.HazelcastSerialClassRunner;
 import com.hazelcast.test.HazelcastTestSupport;
@@ -181,6 +182,8 @@ public class MapLoaderTest extends HazelcastTestSupport {
         SampleIndexableObjectMapLoader loader = new SampleIndexableObjectMapLoader();
 
         Config config = createMapConfig(mapName, loader);
+        config.setProperty(GroupProperty.GENERIC_OPERATION_THREAD_COUNT.getName(), "1");
+        config.setProperty(GroupProperty.PARTITION_OPERATION_THREAD_COUNT.getName(), "1");
 
         NodeBuilder nodeBuilder = new NodeBuilder(nodeCount, config).build();
         HazelcastInstance node = nodeBuilder.getRandomNode();
