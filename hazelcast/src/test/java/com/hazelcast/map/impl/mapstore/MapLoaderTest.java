@@ -22,7 +22,7 @@ import com.hazelcast.test.HazelcastTestSupport;
 import com.hazelcast.test.TestHazelcastInstanceFactory;
 import com.hazelcast.test.annotation.ParallelTest;
 import com.hazelcast.test.annotation.QuickTest;
-import org.junit.Ignore;
+import com.hazelcast.test.annotation.Repeat;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -173,8 +173,8 @@ public class MapLoaderTest extends HazelcastTestSupport {
     }
 
     // ignored due to: https://github.com/hazelcast/hazelcast/issues/5035
-    @Ignore
     @Test
+    @Repeat(500)
     public void testMapLoaderLoadUpdatingIndex() throws Exception {
         final int nodeCount = 3;
         String mapName = randomString();
