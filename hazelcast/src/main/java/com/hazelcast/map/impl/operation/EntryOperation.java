@@ -314,6 +314,7 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
                     }
                     getOperationResponseHandler().sendResponse(EntryOperation.this, t);
                 } finally {
+                    getLogger().severe("EntryOffloadableSetUnlockOperation failed", t);
                     ops.onCompletionAsyncOperation(EntryOperation.this);
                 }
             }
