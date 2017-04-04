@@ -59,6 +59,7 @@ import static com.hazelcast.map.impl.EntryViews.createSimpleEntryView;
 import static com.hazelcast.map.impl.MapService.SERVICE_NAME;
 import static com.hazelcast.map.impl.recordstore.RecordStore.DEFAULT_TTL;
 import static com.hazelcast.spi.ExecutionService.OFFLOADABLE_EXECUTOR;
+import static com.hazelcast.util.ExceptionUtil.sneakyThrow;
 
 /**
  * Contains implementation of the off-loadable contract for EntryProcessor execution on a single key.
@@ -260,34 +261,42 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
         // The locks are not supposed to be migrated on partition migration or partition promotion & downgrade.
         recordStore.localLock(finalDataKey, finalCaller, finalThreadId, finalCallId, -1);
 
-        ops.onStartAsyncOperation(this);
-        getNodeEngine().getExecutionService().execute(executorName, new Runnable() {
-            @Override
-            public void run() {
-                getLogger().severe("runOffloadedModifyingEntryProcessor (Executor) for key " + getKey());
-                try {
-                    final Map.Entry entry = createMapEntry(dataKey, previousValue);
-                    final Data result = process(entry);
-                    if (!noOp(entry, previousValue)) {
-                        Data newValue = toData(entry.getValue());
+        try {
+            ops.onStartAsyncOperation(this);
+            getNodeEngine().getExecutionService().execute(executorName, new Runnable() {
+                @Override
+                public void run() {
+                    getLogger().severe("runOffloadedModifyingEntryProcessor (Executor) for key " + getKey());
+                    try {
+                        final Map.Entry entry = createMapEntry(dataKey, previousValue);
+                        final Data result = process(entry);
+                        if (!noOp(entry, previousValue)) {
+                            Data newValue = toData(entry.getValue());
 
-                        EntryEventType modificationType;
-                        if (entry.getValue() == null) {
-                            modificationType = REMOVED;
+                            EntryEventType modificationType;
+                            if (entry.getValue() == null) {
+                                modificationType = REMOVED;
+                            } else {
+                                modificationType = (previousValue == null) ? ADDED : UPDATED;
+                            }
+
+                            updateAndUnlock(toData(previousValue), newValue, modificationType, finalCaller, finalThreadId,
+                                    result, finalBegin);
                         } else {
-                            modificationType = (previousValue == null) ? ADDED : UPDATED;
+                            unlockOnly(result, finalCaller, finalThreadId, finalBegin);
                         }
-
-                        updateAndUnlock(toData(previousValue), newValue, modificationType, finalCaller, finalThreadId,
-                                result, finalBegin);
-                    } else {
-                        unlockOnly(result, finalCaller, finalThreadId, finalBegin);
+                    } catch (Throwable t) {
+                        unlockOnly(t, finalCaller, finalThreadId, finalBegin);
                     }
-                } catch (Throwable t) {
-                    unlockOnly(t, finalCaller, finalThreadId, finalBegin);
                 }
-            }
-        });
+            });
+        } catch (Throwable t) {
+            getLogger().severe("runOffloadedModifyingEntryProcessor exception (EntryOpertaion) for key " + getKey());
+            sneakyThrow(t);
+        }
+//        finally {
+//            unlockOnly(t, finalCaller, finalThreadId, finalBegin);
+//        }
     }
 
     @SuppressWarnings("unchecked")
