@@ -99,7 +99,7 @@ final class LockResourceImpl implements IdentifiedDataSerializable, LockResource
             this.local = local;
             return true;
         } else if (isLockedBy(owner, threadId)) {
-            if (!transactional && this.referenceId == referenceId) {
+            if (!transactional && !local && this.referenceId == referenceId) {
                 return true;
             }
             this.referenceId = referenceId;
@@ -158,7 +158,7 @@ final class LockResourceImpl implements IdentifiedDataSerializable, LockResource
             return false;
         }
 
-        if (!this.transactional && this.referenceId == referenceId) {
+        if (!this.transactional && !this.local && this.referenceId == referenceId) {
             LOGGER.severe("[deadlock] not unlocking due to the same referenceId=" + referenceId + " for key " + key);
             return true;
         }
