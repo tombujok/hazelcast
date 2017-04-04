@@ -87,6 +87,8 @@ public class EntryOffloadableSetUnlockOperation extends MutatingKeyBasedMapOpera
         verifyLock();
         try {
             updateRecordStore();
+        } catch (Throwable t) {
+            getLogger().severe("EntryOffloadableSetUnlockOperation exception for key " + getKey(), t);
         } finally {
             unlockKey();
             getLogger().severe("EntryOffloadableSetUnlockOperation finished for key " + getKey());
