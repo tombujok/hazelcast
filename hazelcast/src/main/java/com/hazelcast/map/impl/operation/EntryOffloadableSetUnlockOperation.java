@@ -83,15 +83,15 @@ public class EntryOffloadableSetUnlockOperation extends MutatingKeyBasedMapOpera
 
     @Override
     public void run() throws Exception {
-        getLogger().severe("EntryOffloadableSetUnlockOperation started for key " + getKey());
+        getLogger().severe("[deadlock] EntryOffloadableSetUnlockOperation started for key " + getKey());
         verifyLock();
         try {
             updateRecordStore();
         } catch (Throwable t) {
-            getLogger().severe("EntryOffloadableSetUnlockOperation exception for key " + getKey(), t);
+            getLogger().severe("[deadlock] EntryOffloadableSetUnlockOperation exception for key " + getKey(), t);
         } finally {
             unlockKey();
-            getLogger().severe("EntryOffloadableSetUnlockOperation finished for key " + getKey());
+            getLogger().severe("[deadlock] EntryOffloadableSetUnlockOperation finished for key " + getKey());
         }
     }
 
@@ -128,18 +128,18 @@ public class EntryOffloadableSetUnlockOperation extends MutatingKeyBasedMapOpera
     }
 
     public void logError(Throwable t) {
-        getLogger().severe("EntryOffloadableSetUnlockOperation logError for key " + getKey(), t);
+        getLogger().severe("[deadlock] EntryOffloadableSetUnlockOperation logError for key " + getKey(), t);
     }
 
     @Override
     public ExceptionAction onInvocationException(Throwable t) {
-        getLogger().severe("EntryOffloadableSetUnlockOperation onInvocationException for key " + getKey(), t);
+        getLogger().severe("[deadlock] EntryOffloadableSetUnlockOperation onInvocationException for key " + getKey(), t);
         return t instanceof RetryableException ? RETRY_INVOCATION : THROW_EXCEPTION;
     }
 
     @Override
     public void onExecutionFailure(Throwable e) {
-        getLogger().severe("EntryOffloadableSetUnlockOperation onExecutionFailure for key " + getKey(), e);
+        getLogger().severe("[deadlock] EntryOffloadableSetUnlockOperation onExecutionFailure for key " + getKey(), e);
     }
 
     @Override

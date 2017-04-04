@@ -255,7 +255,7 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
         final long finalCallId = getCallId();
         final long finalBegin = begin;
 
-        getLogger().severe("runOffloadedModifyingEntryProcessor (EntryOpertaion) for key " + getKey());
+        getLogger().severe("[deadlock] runOffloadedModifyingEntryProcessor (EntryOpertaion) for key " + getKey());
 
         // The off-loading uses local locks, since the locking is used only on primary-replica.
         // The locks are not supposed to be migrated on partition migration or partition promotion & downgrade.
@@ -266,7 +266,7 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
             getNodeEngine().getExecutionService().execute(executorName, new Runnable() {
                 @Override
                 public void run() {
-                    getLogger().severe("runOffloadedModifyingEntryProcessor (Executor) for key " + getKey());
+                    getLogger().severe("[deadlock] runOffloadedModifyingEntryProcessor (Executor) for key " + getKey());
                     try {
                         final Map.Entry entry = createMapEntry(dataKey, previousValue);
                         final Data result = process(entry);
@@ -291,7 +291,7 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
                 }
             });
         } catch (Throwable t) {
-            getLogger().severe("runOffloadedModifyingEntryProcessor exception (EntryOpertaion) for key " + getKey());
+            getLogger().severe("[deadlock] runOffloadedModifyingEntryProcessor exception (EntryOpertaion) for key " + getKey());
             sneakyThrow(t);
         }
 //        finally {
@@ -304,7 +304,7 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
                                  long threadId, final Object result, long now) {
 
 
-        getLogger().severe("set&unlock invoking (Executor) for key " + getKey());
+        getLogger().severe("[deadlock] set&unlock invoking (Executor) for key " + getKey());
         EntryOffloadableSetUnlockOperation updateOperation = new EntryOffloadableSetUnlockOperation(name, modificationType,
                 dataKey, previousValue, newValue, caller, threadId, now, entryProcessor.getBackupProcessor());
 
@@ -313,7 +313,7 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
             @Override
             public void onResponse(Object response) {
                 try {
-                    getLogger().severe("set&unlock finished (ExecutionCallback)  for key " + getKey());
+                    getLogger().severe("[deadlock] set&unlock finished (ExecutionCallback)  for key " + getKey());
                     getOperationResponseHandler().sendResponse(EntryOperation.this, result);
                 } finally {
                     ops.onCompletionAsyncOperation(EntryOperation.this);
@@ -323,7 +323,7 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
             @Override
             public void onFailure(Throwable t) {
                 try {
-                    getLogger().severe("set&unlock failed (ExecutionCallback)  for key " + getKey(), t);
+                    getLogger().severe("[deadlock] set&unlock failed (ExecutionCallback)  for key " + getKey(), t);
                     // EntryOffloadableLockMismatchException is a marker send from the EntryOffloadableSetUnlockOperation
                     // meaning that the whole invocation of the EntryOffloadableOperation should be retried
                     if (t instanceof EntryOffloadableLockMismatchException) {
@@ -331,7 +331,7 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
                     }
                     getOperationResponseHandler().sendResponse(EntryOperation.this, t);
                 } finally {
-                    getLogger().severe("EntryOffloadableSetUnlockOperation failed", t);
+                    getLogger().severe("[deadlock] EntryOffloadableSetUnlockOperation failed", t);
                     ops.onCompletionAsyncOperation(EntryOperation.this);
                 }
             }
@@ -422,7 +422,11 @@ public class EntryOperation extends MutatingKeyBasedMapOperation implements Back
         if (entryProcessor instanceof ReadOnly) {
             return false;
         }
-        return !recordStore.canAcquireLock(dataKey, getCallerUuid(), getThreadId());
+        boolean shouldWait = !recordStore.canAcquireLock(dataKey, getCallerUuid(), getThreadId());
+        if(shouldWait) {
+            getLogger().severe("[deadlock] shouldWait==true for key = " + getKey());
+        }
+        return shouldWait;
     }
 
     @Override
