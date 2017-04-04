@@ -33,9 +33,11 @@ import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.spi.BackupAwareOperation;
 import com.hazelcast.spi.DefaultObjectNamespace;
 import com.hazelcast.spi.EventService;
+import com.hazelcast.spi.ExceptionAction;
 import com.hazelcast.spi.Notifier;
 import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.WaitNotifyKey;
+import com.hazelcast.spi.exception.RetryableException;
 import com.hazelcast.util.Clock;
 
 import java.io.IOException;
@@ -46,6 +48,8 @@ import static com.hazelcast.core.EntryEventType.UPDATED;
 import static com.hazelcast.map.impl.EntryViews.createSimpleEntryView;
 import static com.hazelcast.map.impl.MapService.SERVICE_NAME;
 import static com.hazelcast.map.impl.recordstore.RecordStore.DEFAULT_TTL;
+import static com.hazelcast.spi.ExceptionAction.RETRY_INVOCATION;
+import static com.hazelcast.spi.ExceptionAction.THROW_EXCEPTION;
 
 /**
  * Set & Unlock processing for the EntryOperation
@@ -79,9 +83,14 @@ public class EntryOffloadableSetUnlockOperation extends MutatingKeyBasedMapOpera
 
     @Override
     public void run() throws Exception {
+        getLogger().severe("EntryOffloadableSetUnlockOperation started for key " + getKey());
         verifyLock();
-        updateRecordStore();
-        unlockKey();
+        try {
+            updateRecordStore();
+        } finally {
+            unlockKey();
+            getLogger().severe("EntryOffloadableSetUnlockOperation finished for key " + getKey());
+        }
     }
 
     private void verifyLock() {
@@ -114,6 +123,21 @@ public class EntryOffloadableSetUnlockOperation extends MutatingKeyBasedMapOpera
             getLogger().severe(String.format("\"EntryOffloadableSetUnlockOperation finished but the unlock method "
                     + "returned false  caller=%s and threadId=%d", caller, threadId));
         }
+    }
+
+    public void logError(Throwable t) {
+        getLogger().severe("EntryOffloadableSetUnlockOperation logError for key " + getKey(), t);
+    }
+
+    @Override
+    public ExceptionAction onInvocationException(Throwable t) {
+        getLogger().severe("EntryOffloadableSetUnlockOperation onInvocationException for key " + getKey(), t);
+        return t instanceof RetryableException ? RETRY_INVOCATION : THROW_EXCEPTION;
+    }
+
+    @Override
+    public void onExecutionFailure(Throwable e) {
+        getLogger().severe("EntryOffloadableSetUnlockOperation onExecutionFailure for key " + getKey(), e);
     }
 
     @Override
