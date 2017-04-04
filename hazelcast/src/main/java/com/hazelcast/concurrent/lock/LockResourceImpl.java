@@ -17,6 +17,8 @@
 package com.hazelcast.concurrent.lock;
 
 import com.hazelcast.concurrent.lock.operations.AwaitOperation;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
@@ -38,6 +40,8 @@ import static com.hazelcast.concurrent.lock.LockDataSerializerHook.F_ID;
 import static com.hazelcast.concurrent.lock.LockDataSerializerHook.LOCK_RESOURCE;
 
 final class LockResourceImpl implements IdentifiedDataSerializable, LockResource {
+
+    private static final ILogger LOGGER = Logger.getLogger(LockResourceImpl.class);
 
     private Data key;
     private String owner;
@@ -155,6 +159,7 @@ final class LockResourceImpl implements IdentifiedDataSerializable, LockResource
         }
 
         if (!this.transactional && this.referenceId == referenceId) {
+            LOGGER.severe("[deadlock] not unlocking due to the same referenceId=" + referenceId + " for key " + key);
             return true;
         }
 

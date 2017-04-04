@@ -121,6 +121,9 @@ public class EntryOffloadableSetUnlockOperation extends MutatingKeyBasedMapOpera
 
     private void unlockKey() {
         boolean unlocked = recordStore.unlock(dataKey, caller, threadId, getCallId());
+        if (recordStore.isLocked(dataKey)) {
+            getLogger().severe("[deadlock] BOOOOOOOM for key " + getKey());
+        }
         if (!unlocked) {
             getLogger().severe(String.format("\"EntryOffloadableSetUnlockOperation finished but the unlock method "
                     + "returned false  caller=%s and threadId=%d", caller, threadId));
