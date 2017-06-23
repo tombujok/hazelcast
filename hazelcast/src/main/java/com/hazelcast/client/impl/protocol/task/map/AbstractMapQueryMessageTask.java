@@ -250,22 +250,22 @@ public abstract class AbstractMapQueryMessageTask<P, QueryResult extends Result,
     private MapOperation createQueryOperation(Query query, Version clusterVersion, MapServiceContext mapServiceContext) {
         boolean isVersion39orGreater = clusterVersion.isGreaterOrEqual(Versions.V3_9);
         // for rolling-upgrade compatibility, the else-clause can be deleted in 4.0
-        if (isVersion39orGreater) {
-            return mapServiceContext.getMapOperationProvider(query.getMapName()).createQueryOperation(query);
-        } else {
+//        if (isVersion39orGreater) {
+//            return mapServiceContext.getMapOperationProvider(query.getMapName()).createQueryOperation(query);
+//        } else {
             return new QueryOperation(query);
-        }
+//        }
     }
 
     private MapOperation createQueryPartitionOperation(Query query, Version clusterVersion,
                                                        MapServiceContext mapServiceContext) {
         // for rolling-upgrade compatibility, the else-clause can be deleted in 4.0
-        boolean isVersion39orGreater = clusterVersion.isGreaterOrEqual(Versions.V3_9);
-        if (isVersion39orGreater) {
-            return mapServiceContext.getMapOperationProvider(
-                    query.getMapName()).createQueryPartitionOperation(query);
-        } else {
+//        boolean isVersion39orGreater = clusterVersion.isGreaterOrEqual(Versions.V3_9);
+//        if (isVersion39orGreater) {
+//            return mapServiceContext.getMapOperationProvider(
+//                    query.getMapName()).createQueryPartitionOperation(query);
+//        } else {
             return new QueryPartitionOperation(query);
-        }
+//        }
     }
 }

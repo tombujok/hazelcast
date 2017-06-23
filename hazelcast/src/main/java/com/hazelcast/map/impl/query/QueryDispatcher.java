@@ -86,7 +86,7 @@ final class QueryDispatcher {
     }
 
     private List<Future<Result>> dispatchFullQueryOnLocalMemberOnQueryThread(Query query) {
-        Operation operation = mapServiceContext.getMapOperationProvider(query.getMapName()).createQueryOperation(query);
+        Operation operation = createQueryOperation(query, clusterService.getClusterVersion());
         Future<Result> result = operationService.invokeOnTarget(
                 MapService.SERVICE_NAME, operation, nodeEngine.getThisAddress());
         return singletonList(result);
@@ -106,12 +106,12 @@ final class QueryDispatcher {
 
     private Operation createQueryOperation(Query query, Version clusterVersion) {
         // for rolling-upgrade compatibility, the else-clause can be deleted in 4.0
-        boolean isVersion39orGreater = clusterVersion.isGreaterOrEqual(Versions.V3_9);
-        if (isVersion39orGreater) {
-            return mapServiceContext.getMapOperationProvider(query.getMapName()).createQueryOperation(query);
-        } else {
+//        boolean isVersion39orGreater = clusterVersion.isGreaterOrEqual(Versions.V3_9);
+//        if (isVersion39orGreater) {
+//            return mapServiceContext.getMapOperationProvider(query.getMapName()).createQueryOperation(query);
+//        } else {
             return new QueryOperation(query);
-        }
+//        }
     }
 
     protected List<Future<Result>> dispatchPartitionScanQueryOnOwnerMemberOnPartitionThread(
@@ -139,12 +139,12 @@ final class QueryDispatcher {
 
     private Operation createQueryPartitionOperation(Query query, Version clusterVersion) {
         // for rolling-upgrade compatibility, the else-clause can be deleted in 4.0
-        boolean isVersion39orGreater = clusterVersion.isGreaterOrEqual(Versions.V3_9);
-        if (isVersion39orGreater) {
-            return mapServiceContext.getMapOperationProvider(query.getMapName()).createQueryPartitionOperation(query);
-        } else {
+//        boolean isVersion39orGreater = clusterVersion.isGreaterOrEqual(Versions.V3_9);
+//        if (isVersion39orGreater) {
+//            return mapServiceContext.getMapOperationProvider(query.getMapName()).createQueryPartitionOperation(query);
+//        } else {
             return new QueryPartitionOperation(query);
-        }
+//        }
     }
 
     private static boolean shouldSkipPartitionsQuery(Collection<Integer> partitionIds) {
