@@ -146,7 +146,7 @@ public class QueryRunner {
         return populateResult(query, partitions, entries);
     }
 
-    private Result populateResult(Query query, Collection<Integer> partitions, Collection<QueryableEntry> entries) {
+    protected Result populateResult(Query query, Collection<Integer> partitions, Collection<QueryableEntry> entries) {
         if (entries != null) {
             // if results have been returned and partition state has not changed, set the partition IDs
             // so that caller is aware of partitions from which results were obtained.
@@ -246,7 +246,7 @@ public class QueryRunner {
         return mapServiceContext.getService().validateMigrationStamp(migrationStamp);
     }
 
-    private void updateStatistics(MapContainer mapContainer) {
+    protected void updateStatistics(MapContainer mapContainer) {
         if (mapContainer.getMapConfig().isStatisticsEnabled()) {
             LocalMapStatsImpl localStats = localMapStatsProvider.getLocalMapStatsImpl(mapContainer.getName());
             localStats.incrementOtherOperations();
