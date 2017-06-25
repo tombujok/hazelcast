@@ -16,6 +16,7 @@
 
 package com.hazelcast.map.impl.query;
 
+import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.map.impl.MapDataSerializerHook;
 import com.hazelcast.map.impl.operation.MapOperation;
 import com.hazelcast.nio.ObjectDataInput;
@@ -41,7 +42,11 @@ public class QueryPartitionOperation extends MapOperation implements PartitionAw
     @Override
     public void run() throws Exception {
         QueryRunner queryRunner = mapServiceContext.getMapQueryRunner(getName());
-        result = queryRunner.runPartitionScanQueryOnGivenOwnedPartition(query, getPartitionId());
+        if (mapServiceContext.getMapContainer(getName()).getMapConfig().getInMemoryFormat().equals(InMemoryFormat.NATIVE)) {
+            result = queryRunner.runPartitionIndexOrPartitionScanQueryOnGivenOwnedPartition(query, getPartitionId());
+        } else {
+            result = queryRunner.runPartitionScanQueryOnGivenOwnedPartition(query, getPartitionId());
+        }
     }
 
     @Override
