@@ -36,7 +36,7 @@ public class TriggerLoadIfNeededOperation extends MapOperation implements Partit
 
     @Override
     public void run() {
-        isLoaded = recordStore.isKeyLoadFinished();
+        isLoaded = recordStore.isLoaded();
         recordStore.maybeDoInitialLoad();
     }
 
