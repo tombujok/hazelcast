@@ -19,9 +19,9 @@ package com.hazelcast.query.impl;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.query.impl.getters.MultiResult;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -142,10 +142,10 @@ public abstract class BaseIndexStore implements IndexStore {
     }
 
     final void copyToMultiResultSet(MultiResultSet resultSet, Map<Data, QueryableEntry> records) {
-        resultSet.addResultSet(new HashMap<Data, QueryableEntry>(records));
+        resultSet.addResultSet(records);
     }
 
-    final SingleResultSet toSingleResultSet(Map<Data, QueryableEntry> records) {
-        return new SingleResultSet(records != null ? new HashMap<Data, QueryableEntry>(records) : null);
+    final Set<QueryableEntry> toSingleResultSet(Map<Data, QueryableEntry> records) {
+        return new SingleResultSet(records);
     }
 }
